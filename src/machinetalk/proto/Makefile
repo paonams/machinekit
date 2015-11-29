@@ -107,7 +107,7 @@ PBDEP_OPT += --vpath=$(GPBINCLUDE)
 PBDEP_OPT += --vpath=$(DESCDIR)/compiler
 
 $(OBJDIR)/$(PROTODIR)/%.d: $(PROTODIR)/%.proto
-	$(ECHO) "protoc create dependencies for $<"
+	$(ECHO) "protoc(src/machinetalk/proto/Makefile) create dependencies for $<"
 	@mkdir -p $(OBJDIR)/$(PROTODIR)
 	$(Q)$(PROTOC) \
 	--plugin=protoc-gen-depends=scripts/protoc-gen-depends \

@@ -158,6 +158,7 @@ EmcController::loadState EmcController::Init(const char *config)
 			char name = GetAxisName(i);
 			bool used = ::strchr(config, name) != NULL;
 			m_used_map.insert(std::pair<char,bool>(name, used));
+            std::cout<<"EmcController::Init i "<<i<<" name "<<name<<" used "<<used<<"\n";
 		}
 
 		SetInitState(lsStartProgress);
@@ -226,6 +227,7 @@ void EmcController::Init_thread()
 
 bool EmcController::Init_internal()
 {
+    rcs_print("EmcController::Init_internal calling initLoad\n");
 	::InitMain();
 	::iniLoad(m_iniFile.c_str());
 	return nmlUpdate(m_iniFile.c_str()) == 0;
@@ -947,6 +949,7 @@ int nmlUpdate(const char *inifile)
 		status = TRY;
 		fprintf(stderr, "Init NML connection\n");
 		::InitMain();
+        rcs_print("src/emc/usr_intf/emccontroller.cc initLoad called\n");
 		::iniLoad(inifile);
 
 	case TRY:

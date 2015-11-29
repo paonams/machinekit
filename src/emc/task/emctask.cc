@@ -664,10 +664,15 @@ int emcTaskPlanCommand(char *cmd)
 
 int emcTaskUpdate(EMC_TASK_STAT * stat)
 {
+    //rcs_print("emcTaskUpdate BEGIN\n");
     stat->mode = (enum EMC_TASK_MODE_ENUM) determineMode();
     int oldstate = stat->state;
     stat->state = (enum EMC_TASK_STATE_ENUM) determineState();
 
+    //rcs_print("emcTaskUpdate mode (%s) state change from (%s) --> (%s)\n",
+    //        emc_task_mode_symbol_lookup(stat->mode),
+    //        emc_task_state_symbol_lookup((enum EMC_TASK_STATE_ENUM)oldstate),
+    //        emc_task_state_symbol_lookup(stat->state));
     if(oldstate == EMC_TASK_STATE_ON && oldstate != stat->state) {
 	emcTaskAbort();
         emcSpindleAbort();
@@ -712,6 +717,7 @@ int emcTaskUpdate(EMC_TASK_STAT * stat)
     
     stat->heartbeat++;
 
+    //rcs_print("emcTaskUpdate END\n");
     return 0;
 }
 

@@ -230,67 +230,82 @@ void RunBackIfStopped( void )
 
 int main( int   argc, char *argv[] )
 {
-	int used=0, NumRung;
-	static int old_level ;
-	old_level = rtapi_get_msg_level();
-	compId=hal_init("classicladder"); //emc
-	if (compId<0) return -1; //emc
-	signal(SIGTERM,do_exit); //emc
-	InitModbusMasterBeforeReadConf( );
-	if (ClassicLadder_AllocAll())
-	{
-		char ProjectLoadedOk=TRUE;		
-		process_options (argc, argv);
-		if (nogui==TRUE)
-		{
-			rtapi_print("INFO CLASSICLADDER-   No ladder GUI requested-Realtime runs till HAL closes.\n");
-			ClassicLadder_InitAllDatas( );
-			ProjectLoadedOk = LoadProjectFiles( InfosGene->CurrentProjectFileName  );
-			if (pathswitch){   strcpy( InfosGene->CurrentProjectFileName, NewPath );   }
-			InfosGene->LadderState = STATE_RUN;
-			ClassicLadder_FreeAll(TRUE);
-			hal_ready(compId);
-			hal_exit(compId);	
-			return 0; 
-		} else {	
-						
-				for(NumRung=0;NumRung<NBR_RUNGS;NumRung++)   {   if ( RungArray[NumRung].Used ) used++;   }
-				if((used==0) || ( (argc - optind) != 0) )
-					    {	
-						ClassicLadder_InitAllDatas( );
-						ProjectLoadedOk = LoadProjectFiles( InfosGene->CurrentProjectFileName );
-						InitGtkWindows( argc, argv );
-						UpdateAllGtkWindows();
-						if (pathswitch){   strcpy( InfosGene->CurrentProjectFileName, NewPath );   }
-						UpdateWindowTitleWithProjectName( );
-						MessageInStatusBar( ProjectLoadedOk?"Project loaded and running":"Project failed to load...");
-						if (!ProjectLoadedOk) 
-						{  
-							   ClassicLadder_InitAllDatas( );   
-							   if (modmaster) {    PrepareModbusMaster( );    }
-						}
-					    }else{
-							   InitGtkWindows( argc, argv );
-							   UpdateAllGtkWindows();
-							   if (pathswitch){   strcpy( InfosGene->CurrentProjectFileName, NewPath );   }
-							   UpdateWindowTitleWithProjectName( );
-							   MessageInStatusBar("GUI reloaded with existing ladder program");
-							   if (modmaster) {    PrepareModbusMaster( );    }
-							} 
-							
-				if (modslave)         {   InitSocketServer( 0/*UseUdpMode*/, ModbusServerPort/*PortNbr*/);  }
-				InfosGene->LadderState = STATE_RUN;
-				hal_ready(compId);
-				gtk_main();
-				rtapi_print("INFO CLASSICLADDER-   Ladder GUI closed. Realtime runs till HAL closes\n");
-				ClassicLadder_FreeAll(TRUE);
-				hal_exit(compId);
-				return 0;
-			}		
-	}
-	 rtapi_print("ERROR CLASSICLADDER-   Ladder memory allocation error\n");
-	ClassicLadder_FreeAll(TRUE);
-	rtapi_set_msg_level(old_level);
-	hal_exit(compId);		
-	return 0;
+    int used=0, NumRung;
+    static int old_level ;
+    old_level = rtapi_get_msg_level();
+    compId=hal_init("classicladder"); //emc
+    if (compId<0) return -1; //emc
+    signal(SIGTERM,do_exit); //emc
+    InitModbusMasterBeforeReadConf( );
+    if (ClassicLadder_AllocAll())
+    {
+        char ProjectLoadedOk=TRUE;
+        process_options (argc, argv);
+        if (nogui==TRUE)
+        {
+            rtapi_print("INFO CLASSICLADDER-  No ladder GUI requested-Realtime runs till HAL closes.\n");
+            ClassicLadder_InitAllDatas( );
+            ProjectLoadedOk = LoadProjectFiles( InfosGene->CurrentProjectFileName  );
+            if (pathswitch){
+                strcpy( InfosGene->CurrentProjectFileName, NewPath );
+            }
+            InfosGene->LadderState = STATE_RUN;
+            ClassicLadder_FreeAll(TRUE);
+            hal_ready(compId);
+            hal_exit(compId);
+            return 0;
+        } else {
+
+            for(NumRung=0;NumRung<NBR_RUNGS;NumRung++){
+                if ( RungArray[NumRung].Used )
+                    used++;
+            }
+            if((used==0) || ( (argc - optind) != 0) )
+            {
+                ClassicLadder_InitAllDatas( );
+                ProjectLoadedOk = LoadProjectFiles( InfosGene->CurrentProjectFileName );
+                InitGtkWindows( argc, argv );
+                UpdateAllGtkWindows();
+                if (pathswitch){
+                    strcpy( InfosGene->CurrentProjectFileName, NewPath );
+                }
+                UpdateWindowTitleWithProjectName( );
+                MessageInStatusBar( ProjectLoadedOk?"Project loaded and running":"Project failed to load...");
+                if (!ProjectLoadedOk)
+                {
+                    ClassicLadder_InitAllDatas( );
+                    if (modmaster) {
+                        PrepareModbusMaster( );
+                    }
+                }
+            }else{
+                InitGtkWindows( argc, argv );
+                UpdateAllGtkWindows();
+                if (pathswitch){
+                    strcpy( InfosGene->CurrentProjectFileName, NewPath );
+                }
+                UpdateWindowTitleWithProjectName( );
+                MessageInStatusBar("GUI reloaded with existing ladder program");
+                if (modmaster) {
+                    PrepareModbusMaster( );
+                }
+            }
+
+            if (modslave)         {
+                InitSocketServer( 0/*UseUdpMode*/, ModbusServerPort/*PortNbr*/);
+            }
+            InfosGene->LadderState = STATE_RUN;
+            hal_ready(compId);
+            gtk_main();
+            rtapi_print("INFO CLASSICLADDER-   Ladder GUI closed. Realtime runs till HAL closes\n");
+            ClassicLadder_FreeAll(TRUE);
+            hal_exit(compId);
+            return 0;
+        }
+    }
+    rtapi_print("ERROR CLASSICLADDER-   Ladder memory allocation error\n");
+    ClassicLadder_FreeAll(TRUE);
+    rtapi_set_msg_level(old_level);
+    hal_exit(compId);
+    return 0;
 }

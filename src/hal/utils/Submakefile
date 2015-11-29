@@ -29,7 +29,7 @@ $(call TOOBJSDEPS, $(HALCMDCCSRCS)) : EXTRAFLAGS =  \
 	../lib/libmtalk.so.0 \
 	../lib/librtapi_math.so.0
 	$(ECHO) Linking $(notdir $@)
-	$(Q)$(CC) $(LDFLAGS) -o $@ $^ $(READLINE_LIBS) \
+	$(Q)$(CC) $(LDFLAGS) -o $@ $^ $(READLINE_LIBS)  -lncurses \
 	$(PROTOBUF_LIBS) $(CZMQ_LIBS) $(AVAHI_LIBS) -lm -lstdc++
 TARGETS += ../bin/halcmd
 

@@ -34,6 +34,13 @@
 #include "timer.hh"
 
 #include <ncurses.h>
+
+#ifdef ENABLE_LOG_FILE
+#include <Log.h>
+#include <LogClass.h>
+LogClass logObject;
+#endif
+
 #define ESC 27
 #define TAB 9
 #define RETURN 13
@@ -1624,6 +1631,10 @@ int main(int argc, char *argv[])
   //char keystick[] = "keystick";
   int charHandled;
 
+#ifdef ENABLE_LOG_FILE
+    string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/keystickLog");
+    logObject.initializeLog(file);
+#endif
   // process command line args, indexing argv[] from [1]
   for (t = 1; t < argc; t++)
     {

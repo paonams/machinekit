@@ -376,7 +376,7 @@ endif
 
 # Rules to make .o (object) files
 $(sort $(CUSEROBJS)) : objects/%.o: %.c
-	$(ECHO) Compiling $<
+	$(ECHO) Compiling CUSEROBJS object files $<
 	@mkdir -p $(dir $@)
 	@rm -f $@
 	$(Q)$(CC) -c $(CFLAGS) $(EXTRAFLAGS) \
@@ -385,7 +385,7 @@ $(sort $(CUSEROBJS)) : objects/%.o: %.c
 
 # Rules to make .o (object) files, build arch
 $(sort $(CUSEROBJS_BUILD)) : objects/%_build.o: %.c
-	$(ECHO) Compiling $<
+	$(ECHO) Compiling CUSEROBJS_BUILD $<
 	@mkdir -p $(dir $@)
 	@rm -f $@
 	$(Q)$(CC_FOR_BUILD) -c $(CFLAGS) $(EXTRAFLAGS) \
@@ -393,7 +393,7 @@ $(sort $(CUSEROBJS_BUILD)) : objects/%_build.o: %.c
 		$< -o $@
 
 $(sort $(CXXUSEROBJS)) : objects/%.o: %.cc
-	$(ECHO) Compiling $<
+	$(ECHO) Compiling CXXUSEROBJS $<
 	@mkdir -p $(dir $@)
 	@rm -f $@
 	$(Q)$(CXX) -c $(CXXFLAGS) $(EXTRAFLAGS) \

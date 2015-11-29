@@ -19,6 +19,7 @@
 #include "webtalk.hh"
 #include <setup_signals.h>
 #include <inihelp.hh>
+#include <iostream>
 
 // configuration defaults
 static wtconf_t conf;
@@ -306,6 +307,8 @@ int main (int argc, char *argv[])
     int logopt = LOG_NDELAY;
     int opt, retval;
     zlist_t *plugins = zlist_new(); // list of .so pathnames
+    std::cout<<"src/machinetalk/webtalk/webtalk_main.cc conf.progname "
+	<<conf.progname<<" conf.inifile "<<conf.inifile<<"\n";
 
     // first pass - only read opts relevant for logging and inifile
     while ((opt = getopt_long(argc, argv, option_string,

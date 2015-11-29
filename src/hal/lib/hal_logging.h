@@ -3,19 +3,22 @@
 
 #include <rtapi.h>
 
+#include <sys/types.h>
+#include <sys/syscall.h>
+
 // checking & logging shorthands
 #define HALERR(fmt, ...)					\
-    rtapi_print_loc(RTAPI_MSG_ERR,__FUNCTION__,__LINE__,	\
+    rtapi_print_loc(RTAPI_MSG_ERR,__FUNCTION__,(pid_t) syscall (SYS_gettid),	\
 		    "HAL error:", fmt, ## __VA_ARGS__)
 #define HALWARN(fmt, ...)					\
-    rtapi_print_loc(RTAPI_MSG_WARN,__FUNCTION__,__LINE__,	\
+    rtapi_print_loc(RTAPI_MSG_WARN,__FUNCTION__,(pid_t) syscall (SYS_gettid),	\
 		    "HAL WARNING:", fmt, ## __VA_ARGS__)
 #define HALINFO(fmt, ...)					\
-    rtapi_print_loc(RTAPI_MSG_INFO,__FUNCTION__,__LINE__,	\
-		    "HAL info:", fmt, ## __VA_ARGS__)
+    rtapi_print_loc(RTAPI_MSG_ERR,__FUNCTION__,(pid_t) syscall (SYS_gettid),	\
+		    "HAL:", fmt, ## __VA_ARGS__)
 
 #define HALDBG(fmt, ...)					\
-    rtapi_print_loc(RTAPI_MSG_DBG,__FUNCTION__,__LINE__,	\
+    rtapi_print_loc(RTAPI_MSG_DBG,__FUNCTION__,(pid_t) syscall (SYS_gettid),	\
 		    "HAL:", fmt, ## __VA_ARGS__)
 
 #define HAL_ASSERT(x)						\

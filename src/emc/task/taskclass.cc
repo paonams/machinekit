@@ -358,6 +358,8 @@ int emcRunHalFiles(const char *filename)
     int lineno,status;
     int n = 1;
     pid_t pid;
+	
+    rcs_print("emcRunHalFiles SANJIT : filename (%s)\n", filename);
 
     if (inifile.Open(filename) == false) {
 	return -1;
@@ -375,6 +377,7 @@ int emcRunHalFiles(const char *filename)
 		       filename, inistring, WEXITSTATUS(status));
 	}
 	n++;
+    rcs_print("emcRunHalFiles SANJIT : inside n (%d)\n", n);
     }
     return 0;
 }

@@ -67,7 +67,7 @@ static int hal_export_xfunctfv(const hal_export_xfunct_args_t *xf, const char *f
         return -ENOMEM;
     }
 
-    HALDBG("exporting function '%s' type %d", name, xf->type);
+    HALINFO("exporting function '%s' type %d", name, xf->type);
     {
 	hal_comp_t *comp  __attribute__((cleanup(halpr_autorelease_mutex)));
 

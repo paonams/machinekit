@@ -813,6 +813,8 @@ Suggestion: Split this in to an Error and a Status flag register..
     extern int emcmotErrorPutfv(emcmot_error_t * errlog, const char *fmt, va_list ap);
     extern int emcmotErrorPutf(emcmot_error_t * errlog, const char *fmt, ...);
     extern int emcmotErrorGet(emcmot_error_t * errlog, char *error);
+/* helper utils */
+char * cmdCodeToString(cmd_code_t code);
 
 #ifdef __cplusplus
 }

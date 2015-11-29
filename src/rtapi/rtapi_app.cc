@@ -63,6 +63,7 @@
 #include <limits.h>
 #include <sys/prctl.h>
 #include <inifile.h>
+#include <iostream>
 
 #include <czmq.h>
 #include <google/protobuf/text_format.h>
@@ -391,6 +392,9 @@ static int do_newinst_cmd(int instance,
 	string s = pbconcat(args);
 	retval = do_kmodinst_args(comp,args,pbreply);
 	if (retval) return retval;
+	rtapi_print_msg(RTAPI_MSG_ERR,
+		"%s: kernel thread comp (%s) instname (%s) instargs='%s'\n",__FUNCTION__,
+		comp.c_str(), instname.c_str(), s.c_str());
 	return procfs_cmd(PROCFS_RTAPICMD,"call newinst %s %s %s",
 			  comp.c_str(),
 			  instname.c_str(),
@@ -424,9 +428,9 @@ static int do_newinst_cmd(int instance,
 			instname.c_str(), s.c_str());
 	    return retval;
 	}
-	rtapi_print_msg(RTAPI_MSG_DBG,
-			"%s: instargs='%s'\n",__FUNCTION__,
-			s.c_str());
+	rtapi_print_msg(RTAPI_MSG_ERR,
+		"%s: non-kernel thread comp (%s) instname (%s) instargs='%s'\n",__FUNCTION__,
+		comp.c_str(), instname.c_str(), s.c_str());
 
 	// massage the argv for the newinst user function,
 	// and call it
@@ -481,6 +485,8 @@ static int do_callfunc_cmd(int instance,
 
     if (kernel_threads(flavor)) {
 	string s = pbconcat(args);
+	rtapi_print_msg(RTAPI_MSG_ERR, "do_callfunc_cmd kernel_threads MT_RTAPI_APP_CALLFUNC func (%s) args (%s)\n",
+		func.c_str(), s.c_str());
 	return procfs_cmd(PROCFS_RTAPICMD,"call %s %s", func.c_str(), s.c_str());
     } else {
 	if (call_usrfunct == NULL) {
@@ -494,6 +500,8 @@ static int do_callfunc_cmd(int instance,
 			       args.size(),
 			       argv,
 			       &ureturn);
+	rtapi_print_msg(RTAPI_MSG_ERR, "do_callfunc_cmd non-kernel_threads MT_RTAPI_APP_CALLFUNC func (%s) args (%s)\n",
+		func.c_str(), pbconcat(args).c_str());
 	if (argv) free(argv);
 	if (retval == 0) retval = ureturn;
 	usrfunct_error(retval, func, args, pbreply);
@@ -523,6 +531,8 @@ static int do_load_cmd(int instance,
 		modules[name] = (void *) -1;  // so 'if (modules[name])' works
 		loading_order.push_back(name);
 	    }
+	    rtapi_print_msg(RTAPI_MSG_ERR, "%s: kernel threads cmd (%s) args (%s)\n",
+		    __FUNCTION__, name.c_str(), cmdargs.c_str());
 	    return retval;
 	} else {
 	    strncpy(module_name, (name + flavor->mod_ext).c_str(),
@@ -576,8 +586,8 @@ static int do_load_cmd(int instance,
 	    }
 	    loading_order.push_back(name);
 
-	    rtapi_print_msg(RTAPI_MSG_DBG, "%s: loaded from %s\n",
-			    name.c_str(), module_name);
+	    rtapi_print_msg(RTAPI_MSG_ERR, "%s: non-kernel thread cmd (%s) mod_name (%s) args (%s)\n",
+		    __FUNCTION__, name.c_str(), module_name, pbconcat(args, " ", "'").c_str());
 	    return 0;
 	}
     } else {
@@ -638,6 +648,7 @@ static int init_actions(int instance)
     get_rtapi_config(moddir,"MODULES",PATH_MAX);
 
     if (kernel_threads(flavor)) {
+	std::cout<<"src/rtapi/rtapi_app.cc init_actions kernel thread inside\n";
 	// kthreads cant possibly run without shmdrv, so bail
 	// also, cannot load it here because rtapi_msgd already needs this
 	// so it'd be too late here
@@ -677,16 +688,21 @@ static int init_actions(int instance)
 	}
     }
     pb::Container reply;
+    std::cout<<"init_actions loading rtapi\n";
     retval =  do_load_cmd(instance, "rtapi", pbstringarray_t(), reply);
-    if (retval)
+    if (retval){
 	return retval;
+    }
+    std::cout<<"init_actions loading hal_lib\n";
     if ((retval = do_load_cmd(instance, "hal_lib", pbstringarray_t(), reply)))
 	return retval;
 
+    std::cout<<"init_actions not kernel_thread\n";
     if (!kernel_threads(flavor)) {
 	// resolve the "hal_call_usrfunct" for later - callfunc, newinst & delinst need it
 	void *hallib = modules["hal_lib"];
 	dlerror();
+	std::cout<<"init_actions not kernel_thread loading hal_call_usrfunct\n";
 	call_usrfunct = (hal_call_usrfunct_t) dlsym(hallib, "hal_call_usrfunct");
 
 	if (call_usrfunct == NULL) {
@@ -775,6 +791,9 @@ static int rtapi_request(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
     }
 
     pbreply.set_type(pb::MT_RTAPI_APP_REPLY);
+    std::cout<<"rtapi_request called with pbreq.type "<<ContainerType_Name(pbreq.type())<<"\n";
+    rtapi_print_msg(RTAPI_MSG_ERR, "rtapi_request with pbreq.type (%s)\n",
+	    ContainerType_Name(pbreq.type()).c_str());
 
     switch (pbreq.type()) {
     case pb::MT_RTAPI_APP_PING:
@@ -802,6 +821,8 @@ static int rtapi_request(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
 					      pbreq.rtapicmd().func(),
 					      pbreq.rtapicmd().argv(),
 					      pbreply));
+	rtapi_print_msg(RTAPI_MSG_ERR, "rtapi_request MT_RTAPI_APP_CALLFUNC func (%s)\n",
+		(pbreq.rtapicmd().func()).c_str());
 	break;
 
     case pb::MT_RTAPI_APP_NEWINST:
@@ -944,6 +965,8 @@ static int rtapi_request(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
     // log accumulated notes
     for (int i = 0; i < pbreply.note_size(); i++) {
 	rtapi_print_msg(pbreply.retcode() ? RTAPI_MSG_ERR : RTAPI_MSG_DBG,
+			pbreply.note(i).c_str());
+	rtapi_print_msg(RTAPI_MSG_ERR,
 			pbreply.note(i).c_str());
     }
 
@@ -1096,6 +1119,7 @@ static int mainloop(size_t  argc, char **argv)
 	memset(argv[i], '\0', strlen(argv[i]));
 
     backtrace_init(proctitle);
+    std::cout<<"src/rtapi/rtapi_app.cc mainloop proctitle "<<proctitle<<"\n";
 
     // set this thread's name so it can be identified in ps/top as
     // rtapi:<instance>
@@ -1187,6 +1211,7 @@ static int mainloop(size_t  argc, char **argv)
 	zsocket_set_linger(z_command, 1000); // wait for last reply to drain
     }
 
+    std::cout<<"src/rtapi/rtapi_app.cc mainloop before NOTYET\n";
 #ifdef NOTYET
     // determine interface to bind to if remote option set
     if ((remote || z_uri)  && interfaces) {
@@ -1224,6 +1249,8 @@ static int mainloop(size_t  argc, char **argv)
 	snprintf(uri, sizeof(uri), ZMQIPC_FORMAT,
 		 RUNDIR, instance_id, "rtapi", service_uuid);
 	mode_t prev = umask(S_IROTH | S_IWOTH | S_IXOTH);
+	std::cout<<"src/rtapi/rtapi_app.cc mainloop before zsocket_bind uri "
+	    <<uri<<"\n";
 	if ((z_port = zsocket_bind(z_command, uri )) < 0) {
 	    rtapi_print_msg(RTAPI_MSG_ERR,  "cannot bind IPC socket '%s' - %s\n",
 			    uri, strerror(errno));
@@ -1238,12 +1265,16 @@ static int mainloop(size_t  argc, char **argv)
     zloop_set_verbose(z_loop, debug);
 
     zmq_pollitem_t signal_poller = { 0, signal_fd, ZMQ_POLLIN };
-    if (trap_signals)
+    if (trap_signals){
+	std::cout<<"src/rtapi/rtapi_app.cc mainloop setting signal_poller\n";
 	zloop_poller (z_loop, &signal_poller, s_handle_signal, NULL);
+    }
 
     zmq_pollitem_t command_poller = { z_command, 0, ZMQ_POLLIN };
+    std::cout<<"src/rtapi/rtapi_app.cc mainloop setting command_poller\n";
     zloop_poller(z_loop, &command_poller, rtapi_request, NULL);
 
+    std::cout<<"src/rtapi/rtapi_app.cc mainloop setting s_handle_timer\n";
     zloop_timer (z_loop, BACKGROUND_TIMER, 0, s_handle_timer, NULL);
 
 #ifdef NOTYET
@@ -1278,6 +1309,8 @@ static int mainloop(size_t  argc, char **argv)
     rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_app:%d ready flavor=%s gcc=%s git=%s",
 		    instance_id, flavor->name,  __VERSION__, GIT_VERSION);
 
+    rtapi_print_msg(RTAPI_MSG_ERR, "rtapi_app:%d ready flavor=%s gcc=%s git=%s",
+		    instance_id, flavor->name,  __VERSION__, GIT_VERSION);
     // the RT stack is now set up and good for use
     global_data->rtapi_app_pid = getpid();
 
@@ -1286,7 +1319,7 @@ static int mainloop(size_t  argc, char **argv)
 	retval = zloop_start(z_loop);
     } while  (!(retval || interrupted));
 
-    rtapi_print_msg(RTAPI_MSG_INFO,
+    rtapi_print_msg(RTAPI_MSG_ERR,
 		    "exiting mainloop (%s)\n",
 		    interrupted ? "interrupted": "by remote command");
 
@@ -1579,6 +1612,8 @@ int main(int argc, char **argv)
 	    exit(0);
 	}
     }
+    std::cout<<"src/rtapi/rtapi_app.cc main inifile "<<inifile
+	<<" progname "<<progname<<"\n";
 
     if (trap_signals && (getenv("NOSIGHDLR") != NULL))
 	trap_signals = false;

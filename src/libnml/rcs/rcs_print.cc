@@ -34,6 +34,10 @@ extern "C" {
 extern "C" double etime(void);
 #endif
 
+#ifdef ENABLE_LOG_FILE
+#include <Log.h>
+#endif
+
 LinkedList *rcs_print_list = NULL;
 char **rcs_lines_table = NULL;
 void (*rcs_print_notify) () = NULL;
@@ -431,6 +435,7 @@ int set_rcs_print_file(char *_file_name)
 int rcs_print(const char *_fmt, ...)
 {
     static char temp_buffer[400];
+    memset(temp_buffer, 400, 0);
     int retval;
     va_list args;
     va_start(args, _fmt);
@@ -439,7 +444,12 @@ int rcs_print(const char *_fmt, ...)
     if (retval == (EOF)) {
 	return EOF;
     }
+
+#ifdef ENABLE_LOG_FILE
+    LOG(temp_buffer);
+#else
     retval = rcs_fputs(temp_buffer);
+#endif
     return (retval);
 }
 
@@ -487,12 +497,13 @@ int rcs_print_debug(long flag_to_check, const char *_fmt, ...)
     int pid = 0;
     va_list args;
     va_start(args, _fmt);
-
+#ifndef ENABLE_LOG_FILE
     if (flag_to_check & rcs_print_mode_flags) {
 	pid = getpid();
 	rcs_print("(time=%f,pid=%d): ", etime(), pid);
 	retval = rcs_vprint(_fmt, args, 0);
     }
+#endif
     va_end(args);
     return (retval);
 }

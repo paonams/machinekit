@@ -71,6 +71,7 @@ check-rsyslog() {
     test $res -ne 0 && return 1
 
     tag=logtest:`echo $$|md5sum|tr -d '-'`
+    echo "tag  $tag"
 
     logger -p local1.debug $tag
     sleep 0.5

@@ -957,6 +957,7 @@ int sendFeedOverride(double override)
     if (override < 0.0) {
 	override = 0.0;
     }
+    rcs_print("sendFeedOverride (src/emc/usr_intf/shcom.cc) override %u\n", override);
 
     emc_traj_set_scale_msg.serial_number = ++emcCommandSerialNumber;
     emc_traj_set_scale_msg.scale = override;
@@ -1330,8 +1331,12 @@ int iniLoad(const char *filename)
     if (NULL != (inistring = inifile.Find("NML_FILE", "EMC"))) {
 	// copy to global
 	strcpy(emc_nmlfile, inistring);
+    rcs_print("initLoad using from initfile emc_nmlfile (%s) filename (%s)\n",
+            emc_nmlfile, filename);
     } else {
 	// not found, use default
+    rcs_print("initLoad using default one emc_nmlfile (%s) filename (%s)\n",
+            emc_nmlfile, filename);
     }
 
     for (t = 0; t < EMC_AXIS_MAX; t++) {

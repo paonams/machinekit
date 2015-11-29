@@ -190,7 +190,7 @@ PBDEP_OPT += --vpath=$(DESCDIR)/compiler
 
 #objects/$(PROTODIR)/%.d: $(PROTODIR)/%.proto
 objects/$(PROTODIR)/%.d: %.proto
-	$(ECHO) "protoc create dependencies for $<"
+	$(ECHO) "protoc (src/machinetalk/Submakefile) create dependencies for $<"
 	@mkdir -p objects/$(PROTODIR)/
 	$(Q)$(PROTOC) \
 	--plugin=protoc-gen-depends=$(GENDEP) \
@@ -211,7 +211,7 @@ endif
 # generate .cc/.h from proto files
 # for command.proto, generated files are: command.pb.cc	command.pb.h
 $(PBGEN)/%.pb.cc $(PBGEN)/%.pb.h: %.proto
-	$(ECHO) "protoc create $@ from $<"
+	$(ECHO) "protoc C++ rule (src/machinetalk/Submakefile) create $@ from $<"
 	@mkdir -p $(PBGEN)
 	$(Q)$(PROTOC) $(PROTOCXX_FLAGS) \
 	--proto_path=$(PROTODIR)/ \

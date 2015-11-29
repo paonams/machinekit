@@ -96,7 +96,7 @@ int hal_create_xthread(const hal_threadargs_t *args)
     CHECK_STRLEN(args->name, HAL_NAME_LEN);
     CHECK_HALDATA();
     CHECK_LOCK(HAL_LOCK_CONFIG);
-    HALDBG("creating thread %s, %ld nsec fp=%d\n",
+    HALINFO("creating thread %s, %ld nsec fp=%d\n",
 	   args->name,
 	   args->period_nsec,
 	   args->uses_fp);
@@ -226,7 +226,7 @@ int hal_create_xthread(const hal_threadargs_t *args)
     new->runtime = 0;
     new->maxtime = 0;
 
-    HALDBG("thread %s id %d created prio=%d",
+    HALINFO("thread %s id %d created prio=%d",
 	   args->name, new->task_id, new->priority);
     return 0;
 }

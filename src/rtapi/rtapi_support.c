@@ -242,10 +242,9 @@ void rtapi_print_loc(const int level,
     va_list args;
     va_start(args, fmt);
 
-    const char *pfmt = "%s:%d %s ";
-    rtapi_snprintf(_rtapi_logmsg, RTAPIPRINTBUFFERLEN, pfmt,
+    const char *pfmt = "%d %s: %s ";
+    rtapi_snprintf(_rtapi_logmsg, RTAPIPRINTBUFFERLEN, pfmt, line,
 		   func  == NULL ? "(nil)" : func,
-		   line,
 		   topic == NULL ? "" : topic);
     int n = strlen(_rtapi_logmsg);
 

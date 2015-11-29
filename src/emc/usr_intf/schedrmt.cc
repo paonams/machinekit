@@ -44,6 +44,11 @@
 #include "shcom.hh"             // NML Messaging functions
 #include "emcsched.hh"
 
+#ifdef ENABLE_LOG_FILE
+#include <Log.h>
+#include <LogClass.h>
+LogClass logObject;
+#endif
 /*
   Using schedrmt:
 
@@ -225,64 +230,66 @@
 // EMC_STAT *emcStatus;
 
 typedef enum {
-  cmdHello, cmdSet, cmdGet, cmdQuit, cmdShutdown, cmdHelp, cmdUnknown} commandTokenType;
-  
+    cmdHello, cmdSet, cmdGet, cmdQuit, cmdShutdown, cmdHelp, cmdUnknown
+} commandTokenType;
+
 typedef enum {
-  scEcho, scVerbose, scEnable, scConfig, scCommMode, scCommProt, scIniFile, scPlat, scIni, scDebug, 
-  scQMode, scQStatus, scAutoTagId, scPgmAdd, scPgmById, scPgmByIndex, scPgmAll, scPriorityById, 
-  scPriorityByIndex, scDeleteById, scDeleteByIndex, scPollRate, scUnknown} setCommandType;
-  
+    scEcho, scVerbose, scEnable, scConfig, scCommMode, scCommProt, scIniFile, scPlat, scIni, scDebug, 
+    scQMode, scQStatus, scAutoTagId, scPgmAdd, scPgmById, scPgmByIndex, scPgmAll, scPriorityById, 
+    scPriorityByIndex, scDeleteById, scDeleteByIndex, scPollRate, scUnknown
+} setCommandType;
+
 typedef enum {
-  rtNoError, rtHandledNoError, rtStandardError, rtCustomError, rtCustomHandledError
-  } cmdResponseType;
-  
+    rtNoError, rtHandledNoError, rtStandardError, rtCustomError, rtCustomHandledError
+} cmdResponseType;
+
 typedef struct {  
-  int cliSock;
-  char hostName[80];
-  char version[8];
-  bool linked;
-  bool echo;
-  bool verbose;
-  bool enabled;
-  int commMode;
-  int commProt;
-  char inBuf[256];
-  char outBuf[4096];
-  char progName[256];} connectionRecType;
+    int cliSock;
+    char hostName[80];
+    char version[8];
+    bool linked;
+    bool echo;
+    bool verbose;
+    bool enabled;
+    int commMode;
+    int commProt;
+    char inBuf[256];
+    char outBuf[4096];
+    char progName[256];} connectionRecType;
 
-int port = 5008;
-int server_sockfd, client_sockfd;
-socklen_t server_len, client_len;
-struct sockaddr_in server_address;
-struct sockaddr_in client_address;
-bool useSockets = true;
-int tokenIdx;
-const char *delims = " \n\r\0";
-int enabledConn = -1;
-char pwd[16] = "EMC\0";
-char enablePWD[16] = "EMCTOO\0";
-char serverName[24] = "EMCNETSVR\0";
-int sessions = 0;
-int maxSessions = -1;
-float pollDelay = 1.0;
+    int port = 5008;
+    int server_sockfd, client_sockfd;
+    socklen_t server_len, client_len;
+    struct sockaddr_in server_address;
+    struct sockaddr_in client_address;
+    bool useSockets = true;
+    int tokenIdx;
+    const char *delims = " \n\r\0";
+    int enabledConn = -1;
+    char pwd[16] = "EMC\0";
+    char enablePWD[16] = "EMCTOO\0";
+    char serverName[24] = "EMCNETSVR\0";
+    int sessions = 0;
+    int maxSessions = -1;
+    float pollDelay = 1.0;
 
-const char *setCommands[] = {
-   "ECHO", "VERBOSE", "ENABLE", "CONFIG", "COMM_MODE", "COMM_PROT", "INIFILE", "PLAT", "INI", "DEBUG",
-   "QMODE", "QSTATUS", "AUTOTAGID", "PGMADD", "PGMBYID", "PGMBYINDEX", "PGMALL", "PRIORITYBYID", 
-   "PRIORITYBYINDEX", "DELETEBYID", "DELETEBYINDEX", "POLLRATE",
-   ""};
+    const char *setCommands[] = {
+        "ECHO", "VERBOSE", "ENABLE", "CONFIG", "COMM_MODE", "COMM_PROT", "INIFILE", "PLAT", "INI", "DEBUG",
+        "QMODE", "QSTATUS", "AUTOTAGID", "PGMADD", "PGMBYID", "PGMBYINDEX", "PGMALL", "PRIORITYBYID", 
+        "PRIORITYBYINDEX", "DELETEBYID", "DELETEBYINDEX", "POLLRATE",
+        ""};
 
 const char *commands[] = {"HELLO", "SET", "GET", "QUIT", "SHUTDOWN", "HELP", ""};
 
 struct option longopts[] = {
-  {"port", 1, NULL, 'p'},
-  {"name", 1, NULL, 'n'},
-  {"sessions", 1, NULL, 's'},
-  {"connectpw", 1, NULL, 'w'},
-  {"enablepw", 1, NULL, 'e'},
-  {"path", 1, NULL, 'd'},
-  {0,0,0,0}
-  };
+    {"port", 1, NULL, 'p'},
+    {"name", 1, NULL, 'n'},
+    {"sessions", 1, NULL, 's'},
+    {"connectpw", 1, NULL, 'w'},
+    {"enablepw", 1, NULL, 'e'},
+    {"path", 1, NULL, 'd'},
+    {0,0,0,0}
+};
 
 
 static void thisQuit()
@@ -290,48 +297,48 @@ static void thisQuit()
     EMC_NULL emc_null_msg;
 
     if (emcStatusBuffer != 0) {
-	// wait until current message has been received
-	emcCommandWaitReceived(emcCommandSerialNumber);
+        // wait until current message has been received
+        emcCommandWaitReceived(emcCommandSerialNumber);
     }
 
     if (emcCommandBuffer != 0) {
-	// send null message to reset serial number to original
-	emc_null_msg.serial_number = saveEmcCommandSerialNumber;
-	emcCommandBuffer->write(emc_null_msg);
+        // send null message to reset serial number to original
+        emc_null_msg.serial_number = saveEmcCommandSerialNumber;
+        emcCommandBuffer->write(emc_null_msg);
     }
     // clean up NML buffers
 
     if (emcErrorBuffer != 0) {
-	delete emcErrorBuffer;
-	emcErrorBuffer = 0;
+        delete emcErrorBuffer;
+        emcErrorBuffer = 0;
     }
 
     if (emcStatusBuffer != 0) {
-	delete emcStatusBuffer;
-	emcStatusBuffer = 0;
-	emcStatus = 0;
+        delete emcStatusBuffer;
+        emcStatusBuffer = 0;
+        emcStatus = 0;
     }
 
     if (emcCommandBuffer != 0) {
-	delete emcCommandBuffer;
-	emcCommandBuffer = 0;
+        delete emcCommandBuffer;
+        emcCommandBuffer = 0;
     }
 
-//    Tcl_Exit(0);
+    //    Tcl_Exit(0);
     exit(0);
 }
 
 static int initSockets()
 {
-  server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  server_address.sin_family = AF_INET;
-  server_address.sin_addr.s_addr = htonl(INADDR_ANY);
-  server_address.sin_port = htons(port);
-  server_len = sizeof(server_address);
-  bind(server_sockfd, (struct sockaddr *)&server_address, server_len);
-  listen(server_sockfd, 5);
-  signal(SIGCHLD, SIG_IGN);
-  return 0;
+    server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    server_address.sin_family = AF_INET;
+    server_address.sin_addr.s_addr = htonl(INADDR_ANY);
+    server_address.sin_port = htons(port);
+    server_len = sizeof(server_address);
+    bind(server_sockfd, (struct sockaddr *)&server_address, server_len);
+    listen(server_sockfd, 5);
+    signal(SIGCHLD, SIG_IGN);
+    return 0;
 }
 
 static void sigQuit(int sig)
@@ -341,892 +348,892 @@ static void sigQuit(int sig)
 
 static int sockWrite(connectionRecType *context)
 {
-   strcat(context->outBuf, "\r\n");
-   return write(context->cliSock, context->outBuf, strlen(context->outBuf));
+    strcat(context->outBuf, "\r\n");
+    return write(context->cliSock, context->outBuf, strlen(context->outBuf));
 }
 
 static setCommandType lookupSetCommand(char *s)
 {
-  setCommandType i = scEcho;
-  int temp;
-  
-  while (i < scUnknown) {
-    if (strcmp(setCommands[i], s) == 0) return i;
-//    (int)i += 1;
-      temp = i;
-      temp++;
-      i = (setCommandType) temp;
+    setCommandType i = scEcho;
+    int temp;
+
+    while (i < scUnknown) {
+        if (strcmp(setCommands[i], s) == 0) return i;
+        //    (int)i += 1;
+        temp = i;
+        temp++;
+        i = (setCommandType) temp;
     }
-  return i;
+    return i;
 }
 
 static int commandHello(connectionRecType *context)
 {
-  char *pch;
-  
-  pch = strtok(NULL, delims);
-  if (pch == NULL) return -1;
-  if (strcmp(pch, pwd) != 0) return -1;
-  pch = strtok(NULL, delims);
-  if (pch == NULL) return -1;
-  strcpy(context->hostName, pch);  
-  pch = strtok(NULL, delims);
-  if (pch == NULL) return -1;
-  context->linked = true;    
-  strcpy(context->version, pch);
-  printf("Connected to %s\n", context->hostName);
-  return 0;
+    char *pch;
+
+    pch = strtok(NULL, delims);
+    if (pch == NULL) return -1;
+    if (strcmp(pch, pwd) != 0) return -1;
+    pch = strtok(NULL, delims);
+    if (pch == NULL) return -1;
+    strcpy(context->hostName, pch);  
+    pch = strtok(NULL, delims);
+    if (pch == NULL) return -1;
+    context->linked = true;    
+    strcpy(context->version, pch);
+    printf("Connected to %s\n", context->hostName);
+    return 0;
 }
 
 static int checkOnOff(char *s)
 {
-  static const char *onStr = "ON";
-  static const char *offStr = "OFF";
-  
-  if (s == NULL) return -1;
-  strupr(s);
-  if (strcmp(s, onStr) == 0) return 0;
-  if (strcmp(s, offStr) == 0) return 1;
-  return -1;
+    static const char *onStr = "ON";
+    static const char *offStr = "OFF";
+
+    if (s == NULL) return -1;
+    strupr(s);
+    if (strcmp(s, onStr) == 0) return 0;
+    if (strcmp(s, offStr) == 0) return 1;
+    return -1;
 }
 
 static int checkBinaryASCII(char *s)
 {
-  static const char *binaryStr = "BINARY";
-  static const char *ASCIIStr = "ASCII";
-  
-  if (s == NULL) return -1;
-  strupr(s);
-  if (strcmp(s, ASCIIStr) == 0) return 0;
-  if (strcmp(s, binaryStr) == 0) return 1;
-  return -1;
+    static const char *binaryStr = "BINARY";
+    static const char *ASCIIStr = "ASCII";
+
+    if (s == NULL) return -1;
+    strupr(s);
+    if (strcmp(s, ASCIIStr) == 0) return 0;
+    if (strcmp(s, binaryStr) == 0) return 1;
+    return -1;
 }
 
 static queueStatusType checkMode(char *s)
 {
-  static const char *runStr = "RUN";
-  static const char *stopStr = "STOP";
-  static const char *pauseStr = "PAUSE";
-  static const char *resumeStr = "RESUME";
+    static const char *runStr = "RUN";
+    static const char *stopStr = "STOP";
+    static const char *pauseStr = "PAUSE";
+    static const char *resumeStr = "RESUME";
 
-  if (s == NULL) return qsError;
-  strupr(s);
-  if (strcmp(s, stopStr) == 0) return qsStop;
-  if (strcmp(s, runStr) == 0) return qsRun;
-  if (strcmp(s, pauseStr) == 0) return qsPause;
-  if (strcmp(s, resumeStr) == 0) return qsResume;
-  return qsError;
+    if (s == NULL) return qsError;
+    strupr(s);
+    if (strcmp(s, stopStr) == 0) return qsStop;
+    if (strcmp(s, runStr) == 0) return qsRun;
+    if (strcmp(s, pauseStr) == 0) return qsPause;
+    if (strcmp(s, resumeStr) == 0) return qsResume;
+    return qsError;
 }
 
 static cmdResponseType setEcho(char *s, connectionRecType *context)
 {
-   
-   switch (checkOnOff(s)) {
-     case -1: return rtStandardError;
-     case 0: context->echo = true; break;
-     case 1: context->echo = false;
-     }
-   return rtNoError;
+
+    switch (checkOnOff(s)) {
+        case -1: return rtStandardError;
+        case 0: context->echo = true; break;
+        case 1: context->echo = false;
+    }
+    return rtNoError;
 }
 
 static cmdResponseType setVerbose(char *s, connectionRecType *context)
 {
-   
-   switch (checkOnOff(s)) {
-     case -1: return rtStandardError;
-     case 0: context->verbose = true; break;
-     case 1: context->verbose = false;
-     }
-   return rtNoError;
+
+    switch (checkOnOff(s)) {
+        case -1: return rtStandardError;
+        case 0: context->verbose = true; break;
+        case 1: context->verbose = false;
+    }
+    return rtNoError;
 }
 
 static cmdResponseType setEnable(char *s, connectionRecType *context)
 {
-  
-   if (strcmp(s, enablePWD) == 0) {
-     enabledConn = context->cliSock;
-     context->enabled = true;
-     return rtNoError;
-     }
-   else 
-     if (checkOnOff(s) == 1) {
-       context->enabled = false;
-       enabledConn = -1;
-       return rtNoError;
-       }
-     else return rtStandardError;
+
+    if (strcmp(s, enablePWD) == 0) {
+        enabledConn = context->cliSock;
+        context->enabled = true;
+        return rtNoError;
+    }
+    else 
+        if (checkOnOff(s) == 1) {
+            context->enabled = false;
+            enabledConn = -1;
+            return rtNoError;
+        }
+        else return rtStandardError;
 }
 
 static cmdResponseType setDebug(char *s, connectionRecType *context)
 {
-  int level;
-  
-  if (strlen(s) == 0) return rtStandardError;
-  if (sscanf(s, "%i", &level) == -1) return rtStandardError;
-  else sendDebug(level);
-  return rtNoError;
+    int level;
+
+    if (strlen(s) == 0) return rtStandardError;
+    if (sscanf(s, "%i", &level) == -1) return rtStandardError;
+    else sendDebug(level);
+    return rtNoError;
 }
 
 static cmdResponseType setConfig(char *s, connectionRecType *context)
 {
-  return rtNoError;
+    return rtNoError;
 }
 
 static cmdResponseType setCommMode(char *s, connectionRecType *context)
 {
-  int ret;
-  
-  ret = checkBinaryASCII(s);
-  if (ret == -1) return rtStandardError;
-  context->commMode = ret;
-  return rtNoError;
+    int ret;
+
+    ret = checkBinaryASCII(s);
+    if (ret == -1) return rtStandardError;
+    context->commMode = ret;
+    return rtNoError;
 }
 
 static cmdResponseType setCommProt(char *s, connectionRecType *context)
 {
-  char *pVersion;
-  
-  pVersion = strtok(NULL, delims);
-  if (pVersion == NULL) return rtStandardError;
-  strcpy(context->version, pVersion);
-  return rtNoError;
+    char *pVersion;
+
+    pVersion = strtok(NULL, delims);
+    if (pVersion == NULL) return rtStandardError;
+    strcpy(context->version, pVersion);
+    return rtNoError;
 }
 
 static cmdResponseType setQMode(char *s, connectionRecType *context)
 {
-  queueStatusType st;
+    queueStatusType st;
 
-  st = checkMode(s);
-  switch (st) {
-    case qsStop: queueStop(); break;
-    case qsRun: queueStart(); break;
-    case qsPause: queuePause(); break;
-    case qsResume: queueStart(); break;
-    case qsError: ;
-    case qsUnknown: ;
+    st = checkMode(s);
+    switch (st) {
+        case qsStop: queueStop(); break;
+        case qsRun: queueStart(); break;
+        case qsPause: queuePause(); break;
+        case qsResume: queueStart(); break;
+        case qsError: ;
+        case qsUnknown: ;
     }
-  if (st == qsError) return rtStandardError;
-  return rtNoError;
+    if (st == qsError) return rtStandardError;
+    return rtNoError;
 }
 
 static cmdResponseType setAutoTagId(char *s, connectionRecType *context)
 {
-  int tagId;
+    int tagId;
 
-  if (strlen(s) == 0) tagId = 0;
-  if (sscanf(s, "%d", &tagId) <= 0) return rtStandardError;
-  resetTagIds(tagId);
-  return rtNoError;
+    if (strlen(s) == 0) tagId = 0;
+    if (sscanf(s, "%d", &tagId) <= 0) return rtStandardError;
+    resetTagIds(tagId);
+    return rtNoError;
 }
 
 static cmdResponseType setPgmAdd(connectionRecType *context)
 {
-  char *pch;
-  int pri;
-  int tag;
-  float x, y, z;
-  int zone;
-  string program;
-  float feed, spindle;
-  int tool;
-  int ret;
+    char *pch;
+    int pri;
+    int tag;
+    float x, y, z;
+    int zone;
+    string program;
+    float feed, spindle;
+    int tool;
+    int ret;
 
-  pch = strtok(NULL, delims);
-  if (pch == NULL) return rtStandardError;
-  if (sscanf(pch, "%d", &pri) <=0) return rtStandardError;
-  pch = strtok(NULL, delims);
-  if (pch == NULL) return rtStandardError;
-  if (sscanf(pch, "%d", &tag) <=0) return rtStandardError;
-  if (tag == 0) tag = getNextTagId();
-  pch = strtok(NULL, delims);
-  if (pch == NULL) return rtStandardError;
-  if (sscanf(pch, "%f", &x) <=0) return rtStandardError;
-  pch = strtok(NULL, delims);
-  if (pch == NULL) return rtStandardError;
-  if (sscanf(pch, "%f", &y) <=0) return rtStandardError;
-  pch = strtok(NULL, delims);
-  if (pch == NULL) return rtStandardError;
-  if (sscanf(pch, "%f", &z) <=0) return rtStandardError;
-  pch = strtok(NULL, delims);
-  if (pch == NULL) return rtStandardError;
-  if (sscanf(pch, "%d", &zone) <=0) return rtStandardError;
-  pch = strtok(NULL, delims);
-  if (pch == NULL) return rtStandardError;
-  program.append(pch, strlen(pch));
-  pch = strtok(NULL, delims);
-  if (pch == NULL) return rtStandardError;
-  if (sscanf(pch, "%f", &feed) <=0) return rtStandardError;
-  pch = strtok(NULL, delims);
-  if (pch == NULL) return rtStandardError;
-  if (sscanf(pch, "%f", &spindle) <=0) return rtStandardError;
-  pch = strtok(NULL, delims);
-  if (pch == NULL) return rtStandardError;
-  if (sscanf(pch, "%d", &tool) <=0) return rtStandardError;
-  ret = addProgram(pri, tag, x, y, z, zone, program, feed, spindle, tool);
-  if (ret == 0) return rtStandardError;
-  return rtNoError;
+    pch = strtok(NULL, delims);
+    if (pch == NULL) return rtStandardError;
+    if (sscanf(pch, "%d", &pri) <=0) return rtStandardError;
+    pch = strtok(NULL, delims);
+    if (pch == NULL) return rtStandardError;
+    if (sscanf(pch, "%d", &tag) <=0) return rtStandardError;
+    if (tag == 0) tag = getNextTagId();
+    pch = strtok(NULL, delims);
+    if (pch == NULL) return rtStandardError;
+    if (sscanf(pch, "%f", &x) <=0) return rtStandardError;
+    pch = strtok(NULL, delims);
+    if (pch == NULL) return rtStandardError;
+    if (sscanf(pch, "%f", &y) <=0) return rtStandardError;
+    pch = strtok(NULL, delims);
+    if (pch == NULL) return rtStandardError;
+    if (sscanf(pch, "%f", &z) <=0) return rtStandardError;
+    pch = strtok(NULL, delims);
+    if (pch == NULL) return rtStandardError;
+    if (sscanf(pch, "%d", &zone) <=0) return rtStandardError;
+    pch = strtok(NULL, delims);
+    if (pch == NULL) return rtStandardError;
+    program.append(pch, strlen(pch));
+    pch = strtok(NULL, delims);
+    if (pch == NULL) return rtStandardError;
+    if (sscanf(pch, "%f", &feed) <=0) return rtStandardError;
+    pch = strtok(NULL, delims);
+    if (pch == NULL) return rtStandardError;
+    if (sscanf(pch, "%f", &spindle) <=0) return rtStandardError;
+    pch = strtok(NULL, delims);
+    if (pch == NULL) return rtStandardError;
+    if (sscanf(pch, "%d", &tool) <=0) return rtStandardError;
+    ret = addProgram(pri, tag, x, y, z, zone, program, feed, spindle, tool);
+    if (ret == 0) return rtStandardError;
+    return rtNoError;
 }
 
 static cmdResponseType setPriorityById(connectionRecType *context)
 {
-  int id;
-  int pri;
-  char *pch;
+    int id;
+    int pri;
+    char *pch;
 
-  pch = strtok(NULL, delims);
-  if (pch == NULL) return rtStandardError;
-  if (sscanf(pch, "%d", &id) <= 0) return rtStandardError;
-  pch = strtok(pch, delims);
-  if (pch == NULL) return rtStandardError;
-  if (sscanf(pch, "%d", &pri) <= 0) return rtStandardError;
-  if (changePriorityById(id, pri) == -1) return rtStandardError;
-  return rtNoError;
+    pch = strtok(NULL, delims);
+    if (pch == NULL) return rtStandardError;
+    if (sscanf(pch, "%d", &id) <= 0) return rtStandardError;
+    pch = strtok(pch, delims);
+    if (pch == NULL) return rtStandardError;
+    if (sscanf(pch, "%d", &pri) <= 0) return rtStandardError;
+    if (changePriorityById(id, pri) == -1) return rtStandardError;
+    return rtNoError;
 }
 
 static cmdResponseType setPriorityByIndex(connectionRecType *context)
 {
-  int index;
-  int pri;
-  char *pch;
+    int index;
+    int pri;
+    char *pch;
 
-  pch = strtok(NULL, delims);
-  if (pch == NULL) return rtStandardError;
-  if (sscanf(pch, "%d", &index) <= 0) return rtStandardError;
-  pch = strtok(pch, delims);
-  if (pch == NULL) return rtStandardError;
-  if (sscanf(pch, "%d", &pri) <= 0) return rtStandardError;
-  if (changePriorityById(index, pri) == -1) return rtStandardError;
-  return rtNoError;
+    pch = strtok(NULL, delims);
+    if (pch == NULL) return rtStandardError;
+    if (sscanf(pch, "%d", &index) <= 0) return rtStandardError;
+    pch = strtok(pch, delims);
+    if (pch == NULL) return rtStandardError;
+    if (sscanf(pch, "%d", &pri) <= 0) return rtStandardError;
+    if (changePriorityById(index, pri) == -1) return rtStandardError;
+    return rtNoError;
 }
 
 static cmdResponseType setDeleteById(char *s, connectionRecType *context)
 {
-  int id;
+    int id;
 
-  if (sscanf(s, "%d", &id) <= 0) return rtStandardError;
-  if (deleteProgramById(id) == -1) return rtStandardError;
-  return rtNoError;
+    if (sscanf(s, "%d", &id) <= 0) return rtStandardError;
+    if (deleteProgramById(id) == -1) return rtStandardError;
+    return rtNoError;
 }
 
 static cmdResponseType setDeleteByIndex(char *s, connectionRecType *context)
 {
-  int index;
+    int index;
 
-  if (strlen(s) == 0) return rtStandardError;
-  if (sscanf(s, "%d", &index) <= 0) return rtStandardError;
-  if (deleteProgramByIndex(index) == -1) return rtStandardError;
-  return rtNoError;
+    if (strlen(s) == 0) return rtStandardError;
+    if (sscanf(s, "%d", &index) <= 0) return rtStandardError;
+    if (deleteProgramByIndex(index) == -1) return rtStandardError;
+    return rtNoError;
 }
 
 static cmdResponseType setPollRate(char *s, connectionRecType *context)
 {
-  float rate;
+    float rate;
 
-  if (strlen(s) == 0) return rtStandardError;
-  if (sscanf(s, "%f", &rate) <= 0) return rtStandardError;
-  pollDelay = rate;
-  return rtNoError;
+    if (strlen(s) == 0) return rtStandardError;
+    if (sscanf(s, "%f", &rate) <= 0) return rtStandardError;
+    pollDelay = rate;
+    return rtNoError;
 }
 
 int commandSet(connectionRecType *context)
 {
-  static const char *setNakStr = "SET NAK\n\r";
-  static const char *setCmdNakStr = "SET %s NAK\n\r";
-  static const char *ackStr = "SET %s ACK\n\r";
-  setCommandType cmd;
-  char *pch;
-  cmdResponseType ret = rtNoError;
-  
-  pch = strtok(NULL, delims);
-  if (pch == NULL) {
-    return write(context->cliSock, setNakStr, strlen(setNakStr));
+    static const char *setNakStr = "SET NAK\n\r";
+    static const char *setCmdNakStr = "SET %s NAK\n\r";
+    static const char *ackStr = "SET %s ACK\n\r";
+    setCommandType cmd;
+    char *pch;
+    cmdResponseType ret = rtNoError;
+
+    pch = strtok(NULL, delims);
+    if (pch == NULL) {
+        return write(context->cliSock, setNakStr, strlen(setNakStr));
     }
-  strupr(pch);
-  cmd = lookupSetCommand(pch);
-  if ((cmd >= scIniFile) && (context->cliSock != enabledConn)) {
-    sprintf(context->outBuf, setCmdNakStr, pch);
-    return write(context->cliSock, context->outBuf, strlen(context->outBuf));
-    }
-  switch (cmd) {
-    case scEcho: ret = setEcho(strtok(NULL, delims), context); break;
-    case scVerbose: ret = setVerbose(strtok(NULL, delims), context); break;
-    case scEnable: ret = setEnable(strtok(NULL, delims), context); break;
-    case scConfig: ret = setConfig(strtok(NULL, delims), context); break;
-    case scCommMode: ret = setCommMode(strtok(NULL, delims), context); break;
-    case scCommProt: ret = setCommProt(strtok(NULL, delims), context); break;
-    case scIniFile: break;
-    case scPlat: break;
-    case scIni: break;
-    case scDebug: ret = setDebug(strtok(NULL, delims), context); break;
-    case scQMode: ret = setQMode(strtok(NULL, delims), context); break;
-    case scQStatus: break;
-    case scAutoTagId: ret = setAutoTagId(strtok(NULL, delims), context); break;
-    case scPgmAdd: ret = setPgmAdd(context); break;
-    case scPgmById: break;
-    case scPgmByIndex: break;
-    case scPgmAll: break;
-    case scPriorityById: ret = setPriorityById(context); break;
-    case scPriorityByIndex: ret = setPriorityByIndex(context); break;
-    case scDeleteById: ret = setDeleteById(strtok(NULL, delims), context); break;
-    case scDeleteByIndex: ret = setDeleteByIndex(strtok(NULL, delims), context); break;
-    case scPollRate: ret = setPollRate(strtok(NULL, delims), context); break;
-    case scUnknown: ret = rtStandardError;
-    }
-  switch (ret) {
-    case rtNoError:  
-      if (context->verbose) {
-        sprintf(context->outBuf, ackStr, pch);
+    strupr(pch);
+    cmd = lookupSetCommand(pch);
+    if ((cmd >= scIniFile) && (context->cliSock != enabledConn)) {
+        sprintf(context->outBuf, setCmdNakStr, pch);
         return write(context->cliSock, context->outBuf, strlen(context->outBuf));
-        }
-      break;
-    case rtHandledNoError: // Custom ok response already handled, take no action
-      break; 
-    case rtStandardError:
-      sprintf(context->outBuf, setCmdNakStr, pch);
-      return write(context->cliSock, context->outBuf, strlen(context->outBuf));
-      break;
-    case rtCustomError: // Custom error response entered in buffer
-      return write(context->cliSock, context->outBuf, strlen(context->outBuf));
-      break;
-    case rtCustomHandledError: ;// Custom error respose handled, take no action
     }
-  return 0;
+    switch (cmd) {
+        case scEcho: ret = setEcho(strtok(NULL, delims), context); break;
+        case scVerbose: ret = setVerbose(strtok(NULL, delims), context); break;
+        case scEnable: ret = setEnable(strtok(NULL, delims), context); break;
+        case scConfig: ret = setConfig(strtok(NULL, delims), context); break;
+        case scCommMode: ret = setCommMode(strtok(NULL, delims), context); break;
+        case scCommProt: ret = setCommProt(strtok(NULL, delims), context); break;
+        case scIniFile: break;
+        case scPlat: break;
+        case scIni: break;
+        case scDebug: ret = setDebug(strtok(NULL, delims), context); break;
+        case scQMode: ret = setQMode(strtok(NULL, delims), context); break;
+        case scQStatus: break;
+        case scAutoTagId: ret = setAutoTagId(strtok(NULL, delims), context); break;
+        case scPgmAdd: ret = setPgmAdd(context); break;
+        case scPgmById: break;
+        case scPgmByIndex: break;
+        case scPgmAll: break;
+        case scPriorityById: ret = setPriorityById(context); break;
+        case scPriorityByIndex: ret = setPriorityByIndex(context); break;
+        case scDeleteById: ret = setDeleteById(strtok(NULL, delims), context); break;
+        case scDeleteByIndex: ret = setDeleteByIndex(strtok(NULL, delims), context); break;
+        case scPollRate: ret = setPollRate(strtok(NULL, delims), context); break;
+        case scUnknown: ret = rtStandardError;
+    }
+    switch (ret) {
+        case rtNoError:  
+            if (context->verbose) {
+                sprintf(context->outBuf, ackStr, pch);
+                return write(context->cliSock, context->outBuf, strlen(context->outBuf));
+            }
+            break;
+        case rtHandledNoError: // Custom ok response already handled, take no action
+            break; 
+        case rtStandardError:
+            sprintf(context->outBuf, setCmdNakStr, pch);
+            return write(context->cliSock, context->outBuf, strlen(context->outBuf));
+            break;
+        case rtCustomError: // Custom error response entered in buffer
+            return write(context->cliSock, context->outBuf, strlen(context->outBuf));
+            break;
+        case rtCustomHandledError: ;// Custom error respose handled, take no action
+    }
+    return 0;
 }
 
 static cmdResponseType getEcho(char *s, connectionRecType *context)
 {
-  const char *pEchoStr = "ECHO %s";
-  
-  if (context->echo) sprintf(context->outBuf, pEchoStr, "ON");
-  else sprintf(context->outBuf, pEchoStr, "OFF");
-  return rtNoError;
+    const char *pEchoStr = "ECHO %s";
+
+    if (context->echo) sprintf(context->outBuf, pEchoStr, "ON");
+    else sprintf(context->outBuf, pEchoStr, "OFF");
+    return rtNoError;
 }
 
 static cmdResponseType getVerbose(char *s, connectionRecType *context)
 {
-  const char *pVerboseStr = "VERBOSE %s";
-  
-  if (context->verbose) sprintf(context->outBuf, pVerboseStr, "ON");
-  else sprintf(context->outBuf, pVerboseStr, "OFF");
-  return rtNoError;
+    const char *pVerboseStr = "VERBOSE %s";
+
+    if (context->verbose) sprintf(context->outBuf, pVerboseStr, "ON");
+    else sprintf(context->outBuf, pVerboseStr, "OFF");
+    return rtNoError;
 }
 
 static cmdResponseType getEnable(char *s, connectionRecType *context)
 {
-  const char *pEnableStr = "ENABLE %s";
-  
-  if (context->cliSock == enabledConn) 
-//  if (context->enabled == true)
-    sprintf(context->outBuf, pEnableStr, "ON");
-  else sprintf(context->outBuf, pEnableStr, "OFF");
-  return rtNoError;
+    const char *pEnableStr = "ENABLE %s";
+
+    if (context->cliSock == enabledConn) 
+        //  if (context->enabled == true)
+        sprintf(context->outBuf, pEnableStr, "ON");
+    else sprintf(context->outBuf, pEnableStr, "OFF");
+    return rtNoError;
 }
 
 static cmdResponseType getConfig(char *s, connectionRecType *context)
 {
-  const char *pConfigStr = "CONFIG";
+    const char *pConfigStr = "CONFIG";
 
-  strcpy(context->outBuf, pConfigStr);
-  return rtNoError;
+    strcpy(context->outBuf, pConfigStr);
+    return rtNoError;
 }
 
 static cmdResponseType getCommMode(char *s, connectionRecType *context)
 {
-  const char *pCommModeStr = "COMM_MODE %s";
-  
-  switch (context->commMode) {
-    case 0: sprintf(context->outBuf, pCommModeStr, "ASCII"); break;
-    case 1: sprintf(context->outBuf, pCommModeStr, "BINARY"); break;
+    const char *pCommModeStr = "COMM_MODE %s";
+
+    switch (context->commMode) {
+        case 0: sprintf(context->outBuf, pCommModeStr, "ASCII"); break;
+        case 1: sprintf(context->outBuf, pCommModeStr, "BINARY"); break;
     }
-  return rtNoError;
+    return rtNoError;
 }
 
 static cmdResponseType getCommProt(char *s, connectionRecType *context)
 {
-  const char *pCommProtStr = "COMM_PROT %s";
-  
-  sprintf(context->outBuf, pCommProtStr, context->version);
-  return rtNoError;
+    const char *pCommProtStr = "COMM_PROT %s";
+
+    sprintf(context->outBuf, pCommProtStr, context->version);
+    return rtNoError;
 }
 
 static cmdResponseType getDebug(char *s, connectionRecType *context)
 {
-  const char *pUpdateStr = "DEBUG %d";
-  
-  sprintf(context->outBuf, pUpdateStr, emcStatus->debug);
-  return rtNoError;
+    const char *pUpdateStr = "DEBUG %d";
+
+    sprintf(context->outBuf, pUpdateStr, emcStatus->debug);
+    return rtNoError;
 }
 
 static cmdResponseType getIniFile(char *s, connectionRecType *context)
 {
-  const char *pIniFile = "INIFILE %s";
-  
-  sprintf(context->outBuf, pIniFile, emc_inifile);
-  return rtNoError;
+    const char *pIniFile = "INIFILE %s";
+
+    sprintf(context->outBuf, pIniFile, emc_inifile);
+    return rtNoError;
 }
 
 static cmdResponseType getPlat(char *s, connectionRecType *context)
 {
-  const char *pPlatStr = "PLAT %s";
-  
-  sprintf(context->outBuf, pPlatStr, "Linux");
-  return rtNoError;  
+    const char *pPlatStr = "PLAT %s";
+
+    sprintf(context->outBuf, pPlatStr, "Linux");
+    return rtNoError;  
 }
 
 static cmdResponseType getQMode(char *s, connectionRecType *context)
 {
-  const char *pQMode = "QMODE %s";
+    const char *pQMode = "QMODE %s";
 
-  switch (getStatus()) {
-    case qsStop: sprintf(context->outBuf, pQMode, "STOP"); break;
-    case qsRun: sprintf(context->outBuf, pQMode, "RUN"); break;
-    case qsPause: sprintf(context->outBuf, pQMode, "PAUSE"); break;
-    case qsError: sprintf(context->outBuf, pQMode, "ERROR"); break;
-    case qsUnknown: ;
+    switch (getStatus()) {
+        case qsStop: sprintf(context->outBuf, pQMode, "STOP"); break;
+        case qsRun: sprintf(context->outBuf, pQMode, "RUN"); break;
+        case qsPause: sprintf(context->outBuf, pQMode, "PAUSE"); break;
+        case qsError: sprintf(context->outBuf, pQMode, "ERROR"); break;
+        case qsUnknown: ;
     }
-  return rtNoError;
+    return rtNoError;
 }
 
 static cmdResponseType getQStatus(connectionRecType *context)
 {
-  const char *pQStatus = "QSTATUS %d %d %d %d";
+    const char *pQStatus = "QSTATUS %d %d %d %d";
 
-  sprintf(context->outBuf, pQStatus, getQueueSize(), getFirstTagId(), getLastTagId(), getQueueCRC());
-  return rtNoError;
+    sprintf(context->outBuf, pQStatus, getQueueSize(), getFirstTagId(), getLastTagId(), getQueueCRC());
+    return rtNoError;
 }
 
 static cmdResponseType getTagId(connectionRecType *context)
 {
-  const char *pTagId = "AUTOTAGID %d";
+    const char *pTagId = "AUTOTAGID %d";
 
-  sprintf(context->outBuf, pTagId, getNextTagId());
-  return rtNoError;
+    sprintf(context->outBuf, pTagId, getNextTagId());
+    return rtNoError;
 }
 
 static cmdResponseType getPgmById(char *s, connectionRecType *context)
 {
-  qRecType qRec;
-  int id;
-  
-  if (strlen(s) == 0) return rtStandardError;
-  if (sscanf(s, "%d", &id) <= 0) return rtStandardError;
-  if (getProgramById(id, &qRec) != 0) return rtStandardError;
-  sprintf(context->outBuf, "PGMBYID %d %d %f %f %f %d %s %f %f %d", 
-    qRec.priority, qRec.tagId, qRec.xpos, qRec.ypos, qRec.zpos, qRec.zone, qRec.fileName,
-    qRec.feedOverride, qRec.spindleOverride, qRec.tool);
-  return rtNoError;
+    qRecType qRec;
+    int id;
+
+    if (strlen(s) == 0) return rtStandardError;
+    if (sscanf(s, "%d", &id) <= 0) return rtStandardError;
+    if (getProgramById(id, &qRec) != 0) return rtStandardError;
+    sprintf(context->outBuf, "PGMBYID %d %d %f %f %f %d %s %f %f %d", 
+            qRec.priority, qRec.tagId, qRec.xpos, qRec.ypos, qRec.zpos, qRec.zone, qRec.fileName,
+            qRec.feedOverride, qRec.spindleOverride, qRec.tool);
+    return rtNoError;
 }
 
 static cmdResponseType getPgmByIndex(char *s, connectionRecType *context)
 {
-  qRecType qRec;
-  int index;
+    qRecType qRec;
+    int index;
 
-  if (strlen(s) == 0) return rtStandardError;  
-  if (sscanf(s, "%d", &index) <= 0) return rtStandardError;
-  if (getProgramByIndex(index, &qRec) != 0) return rtStandardError;
-  sprintf(context->outBuf, "PGMBYINDEX %d %d %f %f %f %d %s %f %f %d", 
-    qRec.priority, qRec.tagId, qRec.xpos, qRec.ypos, qRec.zpos, qRec.zone, qRec.fileName,
-    qRec.feedOverride, qRec.spindleOverride, qRec.tool);
-  return rtNoError;
+    if (strlen(s) == 0) return rtStandardError;  
+    if (sscanf(s, "%d", &index) <= 0) return rtStandardError;
+    if (getProgramByIndex(index, &qRec) != 0) return rtStandardError;
+    sprintf(context->outBuf, "PGMBYINDEX %d %d %f %f %f %d %s %f %f %d", 
+            qRec.priority, qRec.tagId, qRec.xpos, qRec.ypos, qRec.zpos, qRec.zone, qRec.fileName,
+            qRec.feedOverride, qRec.spindleOverride, qRec.tool);
+    return rtNoError;
 }
 
 static cmdResponseType getPgmAll(connectionRecType *context)
 {
-  qRecType qRec;
-  int i;
-  int sz;
+    qRecType qRec;
+    int i;
+    int sz;
 
-  sz = getQueueSize();
-  for (i = 0; i < sz; i++) {
-    if (getProgramByIndex(i, &qRec) != 0) continue;
-    sprintf(context->outBuf, "PGMBYINDEX %d %d %f %f %f %d %s %f %f %d", 
-      qRec.priority, qRec.tagId, qRec.xpos, qRec.ypos, qRec.zpos, qRec.zone, qRec.fileName,
-      qRec.feedOverride, qRec.spindleOverride, qRec.tool);
-    sockWrite(context);
+    sz = getQueueSize();
+    for (i = 0; i < sz; i++) {
+        if (getProgramByIndex(i, &qRec) != 0) continue;
+        sprintf(context->outBuf, "PGMBYINDEX %d %d %f %f %f %d %s %f %f %d", 
+                qRec.priority, qRec.tagId, qRec.xpos, qRec.ypos, qRec.zpos, qRec.zone, qRec.fileName,
+                qRec.feedOverride, qRec.spindleOverride, qRec.tool);
+        sockWrite(context);
     }
-  return rtHandledNoError;
+    return rtHandledNoError;
 }
 
 static cmdResponseType getPriById(char *s, connectionRecType *context)
 {
-  int id;
-  int pri;
+    int id;
+    int pri;
 
-  if (sscanf(s, "%d", &id) <= 0) return rtStandardError;
-  if (getPriorityById(id, pri) == -1) return rtStandardError;
-  sprintf(context->outBuf, "PRIORITYBYID %d %d", id, pri);
-  return rtNoError;
+    if (sscanf(s, "%d", &id) <= 0) return rtStandardError;
+    if (getPriorityById(id, pri) == -1) return rtStandardError;
+    sprintf(context->outBuf, "PRIORITYBYID %d %d", id, pri);
+    return rtNoError;
 }
 
 static cmdResponseType getPriByIndex(char *s, connectionRecType *context)
 {
-  int index;
-  int pri;
+    int index;
+    int pri;
 
-  if (sscanf(s, "%d", &index) <= 0) return rtStandardError;
-  if (getPriorityByIndex(index, pri) == -1) return rtStandardError;
-  sprintf(context->outBuf, "PRIORITYBYINDEX %d %d", index, pri);
-  return rtNoError;
+    if (sscanf(s, "%d", &index) <= 0) return rtStandardError;
+    if (getPriorityByIndex(index, pri) == -1) return rtStandardError;
+    sprintf(context->outBuf, "PRIORITYBYINDEX %d %d", index, pri);
+    return rtNoError;
 }
 
 static cmdResponseType getPollRate(connectionRecType *context)
 {
-  sprintf(context->outBuf, "POLLRATE %f", pollDelay);
-  return rtNoError;
+    sprintf(context->outBuf, "POLLRATE %f", pollDelay);
+    return rtNoError;
 }
 
 int commandGet(connectionRecType *context)
 {
-  static const char *setNakStr = "GET NAK\r\n";
-  static const char *setCmdNakStr = "GET %s NAK\r\n";
-  setCommandType cmd;
-  char *pch;
-  cmdResponseType ret = rtNoError;
-  
-  pch = strtok(NULL, delims);
-  if (pch == NULL) {
-    return write(context->cliSock, setNakStr, strlen(setNakStr));
+    static const char *setNakStr = "GET NAK\r\n";
+    static const char *setCmdNakStr = "GET %s NAK\r\n";
+    setCommandType cmd;
+    char *pch;
+    cmdResponseType ret = rtNoError;
+
+    pch = strtok(NULL, delims);
+    if (pch == NULL) {
+        return write(context->cliSock, setNakStr, strlen(setNakStr));
     }
-  if (emcUpdateType == EMC_UPDATE_AUTO) updateStatus();
-  strupr(pch);
-  cmd = lookupSetCommand(pch);
-  if (cmd > scIni)
     if (emcUpdateType == EMC_UPDATE_AUTO) updateStatus();
-  switch (cmd) {
-    case scEcho: ret = getEcho(pch, context); break;
-    case scVerbose: ret = getVerbose(pch, context); break;
-    case scEnable: ret = getEnable(pch, context); break;
-    case scConfig: ret = getConfig(pch, context); break;
-    case scCommMode: ret = getCommMode(pch, context); break;
-    case scCommProt: ret = getCommProt(pch, context); break;
-    case scIniFile: ret = getIniFile(pch, context); break;
-    case scPlat: ret = getPlat(pch, context); break;
-    case scIni: break;
-    case scDebug: ret = getDebug(pch, context); break;
-    case scQMode: ret = getQMode(pch, context); break;
-    case scQStatus: ret = getQStatus(context); break;
-    case scAutoTagId: ret = getTagId(context);  break;
-    case scPgmAdd: break;
-    case scPgmById: ret = getPgmById(strtok(NULL, delims), context); break;
-    case scPgmByIndex: ret = getPgmByIndex(strtok(NULL, delims), context); break;
-    case scPgmAll: ret = getPgmAll(context); break;
-    case scPriorityById: ret = getPriById(strtok(NULL, delims), context); break;
-    case scPriorityByIndex: ret = getPriByIndex(strtok(NULL, delims), context); break;
-    case scDeleteById: break;
-    case scDeleteByIndex: break;
-    case scPollRate: ret = getPollRate(context); break;
-    case scUnknown: ret = rtStandardError;
+    strupr(pch);
+    cmd = lookupSetCommand(pch);
+    if (cmd > scIni)
+        if (emcUpdateType == EMC_UPDATE_AUTO) updateStatus();
+    switch (cmd) {
+        case scEcho: ret = getEcho(pch, context); break;
+        case scVerbose: ret = getVerbose(pch, context); break;
+        case scEnable: ret = getEnable(pch, context); break;
+        case scConfig: ret = getConfig(pch, context); break;
+        case scCommMode: ret = getCommMode(pch, context); break;
+        case scCommProt: ret = getCommProt(pch, context); break;
+        case scIniFile: ret = getIniFile(pch, context); break;
+        case scPlat: ret = getPlat(pch, context); break;
+        case scIni: break;
+        case scDebug: ret = getDebug(pch, context); break;
+        case scQMode: ret = getQMode(pch, context); break;
+        case scQStatus: ret = getQStatus(context); break;
+        case scAutoTagId: ret = getTagId(context);  break;
+        case scPgmAdd: break;
+        case scPgmById: ret = getPgmById(strtok(NULL, delims), context); break;
+        case scPgmByIndex: ret = getPgmByIndex(strtok(NULL, delims), context); break;
+        case scPgmAll: ret = getPgmAll(context); break;
+        case scPriorityById: ret = getPriById(strtok(NULL, delims), context); break;
+        case scPriorityByIndex: ret = getPriByIndex(strtok(NULL, delims), context); break;
+        case scDeleteById: break;
+        case scDeleteByIndex: break;
+        case scPollRate: ret = getPollRate(context); break;
+        case scUnknown: ret = rtStandardError;
     }
-  switch (ret) {
-    case rtNoError: // Standard ok response, just write value in buffer
-      sockWrite(context);
-      break;
-    case rtHandledNoError: // Custom ok response already handled, take no action
-      break; 
-    case rtStandardError: // Standard error response
-      sprintf(context->outBuf, setCmdNakStr, pch); 
-      sockWrite(context);
-      break;
-    case rtCustomError: // Custom error response entered in buffer
-      sockWrite(context);
-      break;
-    case rtCustomHandledError: ;// Custom error respose handled, take no action
+    switch (ret) {
+        case rtNoError: // Standard ok response, just write value in buffer
+            sockWrite(context);
+            break;
+        case rtHandledNoError: // Custom ok response already handled, take no action
+            break; 
+        case rtStandardError: // Standard error response
+            sprintf(context->outBuf, setCmdNakStr, pch); 
+            sockWrite(context);
+            break;
+        case rtCustomError: // Custom error response entered in buffer
+            sockWrite(context);
+            break;
+        case rtCustomHandledError: ;// Custom error respose handled, take no action
     }
-  return 0;
+    return 0;
 }
 
 int commandQuit(connectionRecType *context)
 {
-  printf("Closing connection with %s\n", context->hostName);
-  return -1;
+    printf("Closing connection with %s\n", context->hostName);
+    return -1;
 }
 
 int commandShutdown(connectionRecType *context)
 {
-  if (context->cliSock == enabledConn) {
-    printf("Shutting down\n");
-    thisQuit();
-    return -1;
+    if (context->cliSock == enabledConn) {
+        printf("Shutting down\n");
+        thisQuit();
+        return -1;
     }
-  else
-    return 0;
+    else
+        return 0;
 }
 
 static int helpGeneral(connectionRecType *context)
 {
-  sprintf(context->outBuf, "Available commands:\n\r");
-  strcat(context->outBuf, "  Hello <password> <client name> <protocol version>\n\r");
-  strcat(context->outBuf, "  Get <emc command>\n\r");
-  strcat(context->outBuf, "  Set <emc command>\n\r");
-  strcat(context->outBuf, "  Shutdown\n\r");
-  strcat(context->outBuf, "  Help <command>\n\r");
-  sockWrite(context);
-  return 0;
+    sprintf(context->outBuf, "Available commands:\n\r");
+    strcat(context->outBuf, "  Hello <password> <client name> <protocol version>\n\r");
+    strcat(context->outBuf, "  Get <emc command>\n\r");
+    strcat(context->outBuf, "  Set <emc command>\n\r");
+    strcat(context->outBuf, "  Shutdown\n\r");
+    strcat(context->outBuf, "  Help <command>\n\r");
+    sockWrite(context);
+    return 0;
 }
 
 static int helpHello(connectionRecType *context)
 {
-  sprintf(context->outBuf, "Usage:\n\r");
-  strcat(context->outBuf, "  Hello <Password> <Client Name> <Protocol Version>\n\rWhere:\n\r");
-  strcat(context->outBuf, "  Password is the connection password to allow communications with the CNC server.\n\r");
-  strcat(context->outBuf, "  Client Name is the name of client trying to connect, typically the network name of the client.\n\r");
-  strcat(context->outBuf, "  Protocol Version is the version of the protocol with which the client wishes to use.\n\r\n\r");
-  strcat(context->outBuf, "  With valid password, server responds with:\n\r");
-  strcat(context->outBuf, "  Hello Ack <Server Name> <Protocol Version>\n\rWhere:\n\r");
-  strcat(context->outBuf, "  Ack is acknowledging the connection has been made.\n\r");
-  strcat(context->outBuf, "  Server Name is the name of the EMC Server to which the client has connected.\n\r");
-  strcat(context->outBuf, "  Protocol Version is the cleint requested version or latest version support by server if");
-  strcat(context->outBuf, "  the client requests a version later than that supported by the server.\n\r\n\r");
-  strcat(context->outBuf, "  With invalid password, the server responds with:\n\r");
-  strcat(context->outBuf, "  Hello Nak\n\r");
-  sockWrite(context);
-  return 0;
+    sprintf(context->outBuf, "Usage:\n\r");
+    strcat(context->outBuf, "  Hello <Password> <Client Name> <Protocol Version>\n\rWhere:\n\r");
+    strcat(context->outBuf, "  Password is the connection password to allow communications with the CNC server.\n\r");
+    strcat(context->outBuf, "  Client Name is the name of client trying to connect, typically the network name of the client.\n\r");
+    strcat(context->outBuf, "  Protocol Version is the version of the protocol with which the client wishes to use.\n\r\n\r");
+    strcat(context->outBuf, "  With valid password, server responds with:\n\r");
+    strcat(context->outBuf, "  Hello Ack <Server Name> <Protocol Version>\n\rWhere:\n\r");
+    strcat(context->outBuf, "  Ack is acknowledging the connection has been made.\n\r");
+    strcat(context->outBuf, "  Server Name is the name of the EMC Server to which the client has connected.\n\r");
+    strcat(context->outBuf, "  Protocol Version is the cleint requested version or latest version support by server if");
+    strcat(context->outBuf, "  the client requests a version later than that supported by the server.\n\r\n\r");
+    strcat(context->outBuf, "  With invalid password, the server responds with:\n\r");
+    strcat(context->outBuf, "  Hello Nak\n\r");
+    sockWrite(context);
+    return 0;
 }
 
 static int helpGet(connectionRecType *context)
 {
-  sprintf(context->outBuf, "Usage:\n\rGet <emc command>\n\r");
-  strcat(context->outBuf, "  Get commands require that a hello has been successfully negotiated.\n\r");
-  strcat(context->outBuf, "  Emc command may be one of:\n\r");
-  strcat(context->outBuf, "    AutoTagId\n\r");
-  strcat(context->outBuf, "    Comm_mode\n\r");
-  strcat(context->outBuf, "    Comm_prot\n\r");
-  strcat(context->outBuf, "    Debug\n\r");
-  strcat(context->outBuf, "    Echo\n\r");
-  strcat(context->outBuf, "    Enable\n\r");
-  strcat(context->outBuf, "    Inifile\n\r");
-  strcat(context->outBuf, "    PgmById <Tag Id>\n\r");
-  strcat(context->outBuf, "    PgmByIndex <Index>\n\r");
-  strcat(context->outBuf, "    PriorityById <Tag Id>\n\r");
-  strcat(context->outBuf, "    PriorityByIndex <Tag Index>\n\r");
-  strcat(context->outBuf, "    Plat\n\r");
-  strcat(context->outBuf, "    QMode\n\r");
-  strcat(context->outBuf, "    QStatus\n\r");
-  strcat(context->outBuf, "    Verbose\n\r");
-//  strcat(context->outBuf, "CONFIG\n\r");
-  sockWrite(context);
-  return 0;
+    sprintf(context->outBuf, "Usage:\n\rGet <emc command>\n\r");
+    strcat(context->outBuf, "  Get commands require that a hello has been successfully negotiated.\n\r");
+    strcat(context->outBuf, "  Emc command may be one of:\n\r");
+    strcat(context->outBuf, "    AutoTagId\n\r");
+    strcat(context->outBuf, "    Comm_mode\n\r");
+    strcat(context->outBuf, "    Comm_prot\n\r");
+    strcat(context->outBuf, "    Debug\n\r");
+    strcat(context->outBuf, "    Echo\n\r");
+    strcat(context->outBuf, "    Enable\n\r");
+    strcat(context->outBuf, "    Inifile\n\r");
+    strcat(context->outBuf, "    PgmById <Tag Id>\n\r");
+    strcat(context->outBuf, "    PgmByIndex <Index>\n\r");
+    strcat(context->outBuf, "    PriorityById <Tag Id>\n\r");
+    strcat(context->outBuf, "    PriorityByIndex <Tag Index>\n\r");
+    strcat(context->outBuf, "    Plat\n\r");
+    strcat(context->outBuf, "    QMode\n\r");
+    strcat(context->outBuf, "    QStatus\n\r");
+    strcat(context->outBuf, "    Verbose\n\r");
+    //  strcat(context->outBuf, "CONFIG\n\r");
+    sockWrite(context);
+    return 0;
 }
 
 static int helpSet(connectionRecType *context)
 {
-  sprintf(context->outBuf, "Usage:\n\r  Set <emc command>\n\r");
-  strcat(context->outBuf, "  Set commands require that a hello has been successfully negotiated,\n\r");
-  strcat(context->outBuf, "  in most instances requires that control be enabled by the connection.\n\r");
-  strcat(context->outBuf, "  The set commands not requiring control enabled are:\n\r");
-  strcat(context->outBuf, "    Comm_mode <mode>\n\r");
-  strcat(context->outBuf, "    Comm_prot <protocol>\n\r");
-  strcat(context->outBuf, "    Echo <On | Off>\n\r");
-  strcat(context->outBuf, "    Enable <Pwd | Off>\n\r");
-  strcat(context->outBuf, "    Verbose <On | Off>\n\r\n\r");
-  strcat(context->outBuf, "  The set commands requiring control enabled are:\n\r");
-  strcat(context->outBuf, "    AutoTagId <Start Id>\n\r");
-  strcat(context->outBuf, "    PgmAdd <Priority> <Tag Id> <X> <Y> <Z> <Zone> <File Name> <Feed Override> <Spindle Override> <Tool No>\n\r");
-  strcat(context->outBuf, "    PriorityById <Tag Id> <Priority>\n\r");
-  strcat(context->outBuf, "    PriorityByIndex <Index> <Priority>\n\r");
-  strcat(context->outBuf, "    DeleteById <Tag Id> \n\r");
-  strcat(context->outBuf, "    DeleteByIndex <Index> \n\r");
-  strcat(context->outBuf, "    QMode <stop | run | pause | resume>\n\r");
- 
-  sockWrite(context);
-  return 0;
+    sprintf(context->outBuf, "Usage:\n\r  Set <emc command>\n\r");
+    strcat(context->outBuf, "  Set commands require that a hello has been successfully negotiated,\n\r");
+    strcat(context->outBuf, "  in most instances requires that control be enabled by the connection.\n\r");
+    strcat(context->outBuf, "  The set commands not requiring control enabled are:\n\r");
+    strcat(context->outBuf, "    Comm_mode <mode>\n\r");
+    strcat(context->outBuf, "    Comm_prot <protocol>\n\r");
+    strcat(context->outBuf, "    Echo <On | Off>\n\r");
+    strcat(context->outBuf, "    Enable <Pwd | Off>\n\r");
+    strcat(context->outBuf, "    Verbose <On | Off>\n\r\n\r");
+    strcat(context->outBuf, "  The set commands requiring control enabled are:\n\r");
+    strcat(context->outBuf, "    AutoTagId <Start Id>\n\r");
+    strcat(context->outBuf, "    PgmAdd <Priority> <Tag Id> <X> <Y> <Z> <Zone> <File Name> <Feed Override> <Spindle Override> <Tool No>\n\r");
+    strcat(context->outBuf, "    PriorityById <Tag Id> <Priority>\n\r");
+    strcat(context->outBuf, "    PriorityByIndex <Index> <Priority>\n\r");
+    strcat(context->outBuf, "    DeleteById <Tag Id> \n\r");
+    strcat(context->outBuf, "    DeleteByIndex <Index> \n\r");
+    strcat(context->outBuf, "    QMode <stop | run | pause | resume>\n\r");
+
+    sockWrite(context);
+    return 0;
 }
 
 static int helpQuit(connectionRecType *context)
 {
-  sprintf(context->outBuf, "Usage:\n\r");
-  strcat(context->outBuf, "  The quit command has the server initiate a disconnect from the client,\n\r");
-  strcat(context->outBuf, "  the command has no parameters and no requirements to have negotiated\n\r");
-  strcat(context->outBuf, "  a hello, or be in control.");
-  sockWrite(context);
-  return 0;
+    sprintf(context->outBuf, "Usage:\n\r");
+    strcat(context->outBuf, "  The quit command has the server initiate a disconnect from the client,\n\r");
+    strcat(context->outBuf, "  the command has no parameters and no requirements to have negotiated\n\r");
+    strcat(context->outBuf, "  a hello, or be in control.");
+    sockWrite(context);
+    return 0;
 }
 
 static int helpShutdown(connectionRecType *context)
 {
-  sprintf(context->outBuf, "Usage:\n\r");
-  strcat(context->outBuf, "  The shutdown command terminates the connection with all clients,\n\r");
-  strcat(context->outBuf, "  and initiates a shutdown of EMC. The command has no parameters, and\n\r");
-  strcat(context->outBuf, "  can only be issued by the connection having control.\n\r");
-  sockWrite(context);
-  return 0;
+    sprintf(context->outBuf, "Usage:\n\r");
+    strcat(context->outBuf, "  The shutdown command terminates the connection with all clients,\n\r");
+    strcat(context->outBuf, "  and initiates a shutdown of EMC. The command has no parameters, and\n\r");
+    strcat(context->outBuf, "  can only be issued by the connection having control.\n\r");
+    sockWrite(context);
+    return 0;
 }
 
 static int helpHelp(connectionRecType *context)
 {
-  sprintf(context->outBuf, "If you need help on help, it is time to look into another line of work.\n\r");
-  sockWrite(context);
-  return 0;
+    sprintf(context->outBuf, "If you need help on help, it is time to look into another line of work.\n\r");
+    sockWrite(context);
+    return 0;
 }
 
 int commandHelp(connectionRecType *context)
 {
-  char *pch;
-  
-  pch = strtok(NULL, delims);
-  if (pch == NULL) return (helpGeneral(context));
-  strupr(pch);
-  if (strcmp(pch, "HELLO") == 0) return (helpHello(context));
-  if (strcmp(pch, "GET") == 0) return (helpGet(context));
-  if (strcmp(pch, "SET") == 0) return (helpSet(context));
-  if (strcmp(pch, "QUIT") == 0) return (helpQuit(context));
-  if (strcmp(pch, "SHUTDOWN") == 0) return (helpShutdown(context));
-  if (strcmp(pch, "HELP") == 0) return (helpHelp(context));
-  sprintf(context->outBuf, "%s is not a valid command.", pch);
-  sockWrite(context);
-  return 0;
+    char *pch;
+
+    pch = strtok(NULL, delims);
+    if (pch == NULL) return (helpGeneral(context));
+    strupr(pch);
+    if (strcmp(pch, "HELLO") == 0) return (helpHello(context));
+    if (strcmp(pch, "GET") == 0) return (helpGet(context));
+    if (strcmp(pch, "SET") == 0) return (helpSet(context));
+    if (strcmp(pch, "QUIT") == 0) return (helpQuit(context));
+    if (strcmp(pch, "SHUTDOWN") == 0) return (helpShutdown(context));
+    if (strcmp(pch, "HELP") == 0) return (helpHelp(context));
+    sprintf(context->outBuf, "%s is not a valid command.", pch);
+    sockWrite(context);
+    return 0;
 }
 
 commandTokenType lookupToken(char *s)
 {
-  commandTokenType i = cmdHello;
-  int temp;
-  
-  while (i < cmdUnknown) {
-    if (strcmp(commands[i], s) == 0) return i;
-//    (int)i += 1;
-    temp = i;
-    temp++;
-    i = (commandTokenType) temp;
+    commandTokenType i = cmdHello;
+    int temp;
+
+    while (i < cmdUnknown) {
+        if (strcmp(commands[i], s) == 0) return i;
+        //    (int)i += 1;
+        temp = i;
+        temp++;
+        i = (commandTokenType) temp;
     }
-  return i;
+    return i;
 }
-  
+
 int parseCommand(connectionRecType *context)
 {
-  int ret = 0;
-  char *pch;
-  char s[64];
-  static const char *helloNakStr = "HELLO NAK\r\n";
-  static const char *shutdownNakStr = "SHUTDOWN NAK\r\n";
-  static const char *helloAckStr = "HELLO ACK %s 1.1\r\n";
-  static const char *setNakStr = "SET NAK\r\n";
-    
-  pch = strtok(context->inBuf, delims);
-  sprintf(s, helloAckStr, serverName);
-  if (pch != NULL) {
-    strupr(pch);
-    switch (lookupToken(pch)) {
-      case cmdHello: 
-        if (commandHello(context) == -1)
-          ret = write(context->cliSock, helloNakStr, strlen(helloNakStr));
-        else ret = write(context->cliSock, s, strlen(s));
-        break;
-      case cmdGet: 
-        ret = commandGet(context);
-        break;
-      case cmdSet:
-        if (!context->linked)
-	  ret = write(context->cliSock, setNakStr, strlen(setNakStr));
-        else ret = commandSet(context);
-        break;
-      case cmdQuit: 
-        ret = commandQuit(context);
-        break;
-      case cmdShutdown:
-        ret = commandShutdown(context);
-        if(ret ==0){
-          ret = write(context->cliSock, shutdownNakStr, strlen(shutdownNakStr));
+    int ret = 0;
+    char *pch;
+    char s[64];
+    static const char *helloNakStr = "HELLO NAK\r\n";
+    static const char *shutdownNakStr = "SHUTDOWN NAK\r\n";
+    static const char *helloAckStr = "HELLO ACK %s 1.1\r\n";
+    static const char *setNakStr = "SET NAK\r\n";
+
+    pch = strtok(context->inBuf, delims);
+    sprintf(s, helloAckStr, serverName);
+    if (pch != NULL) {
+        strupr(pch);
+        switch (lookupToken(pch)) {
+            case cmdHello: 
+                if (commandHello(context) == -1)
+                    ret = write(context->cliSock, helloNakStr, strlen(helloNakStr));
+                else ret = write(context->cliSock, s, strlen(s));
+                break;
+            case cmdGet: 
+                ret = commandGet(context);
+                break;
+            case cmdSet:
+                if (!context->linked)
+                    ret = write(context->cliSock, setNakStr, strlen(setNakStr));
+                else ret = commandSet(context);
+                break;
+            case cmdQuit: 
+                ret = commandQuit(context);
+                break;
+            case cmdShutdown:
+                ret = commandShutdown(context);
+                if(ret ==0){
+                    ret = write(context->cliSock, shutdownNakStr, strlen(shutdownNakStr));
+                }
+                break;
+            case cmdHelp:
+                ret = commandHelp(context);
+                break;
+            case cmdUnknown: ret = -2;
         }
-	break;
-      case cmdHelp:
-        ret = commandHelp(context);
-	break;
-      case cmdUnknown: ret = -2;
-      }
     }
-  return ret;
+    return ret;
 }
 
 void *checkQueue(void *arg)
 {
-  while (1) {
-    updateQueue();
-    sleep((unsigned)pollDelay);
+    while (1) {
+        updateQueue();
+        sleep((unsigned)pollDelay);
     }
-  return 0;
+    return 0;
 }  
 
 void *readClient(void *arg)
 {
-  char str[1600];
-  char buf[1600];
-  unsigned int i, j;
-  int len;
-  connectionRecType *context;
-  
-  
-//  res = 1;
-  context = (connectionRecType *) malloc(sizeof(connectionRecType));
-  context->cliSock = client_sockfd;
-  context->linked = false;
-  context->echo = true;
-  context->verbose = false;
-  strcpy(context->version, "1.0");
-  strcpy(context->hostName, "Default");
-  context->enabled = false;
-  context->commMode = 0;
-  context->commProt = 0;
-  context->inBuf[0] = 0;
-  buf[0] = 0;
-  
-  while (1) {
-    len = read(context->cliSock, &str, 1600);
-    if (len <= 0) goto finished;
-    str[len] = 0;
-    strcat(buf, str);
-    if (!memchr(str, 0x0d, strlen(str))) continue;
-    if (context->echo && context->linked)
-      if(write(context->cliSock, buf, strlen(buf)) != (ssize_t)strlen(buf)) {
-        fprintf(stderr, "emcrsh: write() failed: %s", strerror(errno));
-      }
-    i = 0;
-    j = 0;
-    while (i <= strlen(buf)) {
-      if ((buf[i] != '\n') && (buf[i] != '\r')) {
-        context->inBuf[j] = buf[i];
-	j++;
-	}
-      else
-        if (j > 0)
-          {
-  	    context->inBuf[j] = 0;
-            if (parseCommand(context) == -1) goto finished;
-	    j = 0;
-	}
-        i++;	
-      }
+    char str[1600];
+    char buf[1600];
+    unsigned int i, j;
+    int len;
+    connectionRecType *context;
+
+
+    //  res = 1;
+    context = (connectionRecType *) malloc(sizeof(connectionRecType));
+    context->cliSock = client_sockfd;
+    context->linked = false;
+    context->echo = true;
+    context->verbose = false;
+    strcpy(context->version, "1.0");
+    strcpy(context->hostName, "Default");
+    context->enabled = false;
+    context->commMode = 0;
+    context->commProt = 0;
+    context->inBuf[0] = 0;
     buf[0] = 0;
+
+    while (1) {
+        len = read(context->cliSock, &str, 1600);
+        if (len <= 0) goto finished;
+        str[len] = 0;
+        strcat(buf, str);
+        if (!memchr(str, 0x0d, strlen(str))) continue;
+        if (context->echo && context->linked)
+            if(write(context->cliSock, buf, strlen(buf)) != (ssize_t)strlen(buf)) {
+                fprintf(stderr, "emcrsh: write() failed: %s", strerror(errno));
+            }
+        i = 0;
+        j = 0;
+        while (i <= strlen(buf)) {
+            if ((buf[i] != '\n') && (buf[i] != '\r')) {
+                context->inBuf[j] = buf[i];
+                j++;
+            }
+            else
+                if (j > 0)
+                {
+                    context->inBuf[j] = 0;
+                    if (parseCommand(context) == -1) goto finished;
+                    j = 0;
+                }
+            i++;	
+        }
+        buf[0] = 0;
     } 
 
 finished:
-  close(context->cliSock);
-  free(context);
-  pthread_exit((void *)0);
-  sessions--;  // FIXME: not reached
+    close(context->cliSock);
+    free(context);
+    pthread_exit((void *)0);
+    sessions--;  // FIXME: not reached
 }
 
 int sockMain()
 {
     pthread_t thrd;
     int res;
-    
+
     while (1) {
-      
-      client_len = sizeof(client_address);
-      client_sockfd = accept(server_sockfd,
-        (struct sockaddr *)&client_address, &client_len);
-      if (client_sockfd < 0) exit(0);
-      sessions++;
-      if ((maxSessions == -1) || (sessions <= maxSessions))
-        res = pthread_create(&thrd, NULL, readClient, (void *)NULL);
-      else res = -1;
-      if (res != 0) {
-        close(client_sockfd);
-        sessions--;
+
+        client_len = sizeof(client_address);
+        client_sockfd = accept(server_sockfd,
+                (struct sockaddr *)&client_address, &client_len);
+        if (client_sockfd < 0) exit(0);
+        sessions++;
+        if ((maxSessions == -1) || (sessions <= maxSessions))
+            res = pthread_create(&thrd, NULL, readClient, (void *)NULL);
+        else res = -1;
+        if (res != 0) {
+            close(client_sockfd);
+            sessions--;
         }
-     }
+    }
     return 0;
 }
 
@@ -1260,29 +1267,34 @@ int main(int argc, char *argv[])
     initMain();
     // process local command line args
     while((opt = getopt_long(argc, argv, "e:n:p:s:w:", longopts, NULL)) != -1) {
-      switch(opt) {
-        case 'e': strncpy(enablePWD, optarg, strlen(optarg) + 1); break;
-        case 'n': strncpy(serverName, optarg, strlen(optarg) + 1); break;
-        case 'p': sscanf(optarg, "%d", &port); break;
-        case 's': sscanf(optarg, "%d", &maxSessions); break;
-        case 'w': strncpy(pwd, optarg, strlen(optarg) + 1); break;
-        case 'd': strncpy(defaultPath, optarg, strlen(optarg) + 1);
+        switch(opt) {
+            case 'e': strncpy(enablePWD, optarg, strlen(optarg) + 1); break;
+            case 'n': strncpy(serverName, optarg, strlen(optarg) + 1); break;
+            case 'p': sscanf(optarg, "%d", &port); break;
+            case 's': sscanf(optarg, "%d", &maxSessions); break;
+            case 'w': strncpy(pwd, optarg, strlen(optarg) + 1); break;
+            case 'd': strncpy(defaultPath, optarg, strlen(optarg) + 1);
         }
-      }
+    }
 
+#ifdef ENABLE_LOG_FILE
+    string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/schedrmtLog");
+    logObject.initializeLog(file);
+#endif
     // process emc command line args
     if (emcGetArgs(argc, argv) != 0) {
-	rcs_print_error("error in argument list\n");
-	exit(1);
+        rcs_print_error("error in argument list\n");
+        exit(1);
     }
+    rcs_print("src/emc/usr_intf/schedrmt.cc main called\n");
     // get configuration information
     iniLoad(emc_inifile);
     initSockets();
     // init NML
     if (tryNml() != 0) {
-	rcs_print_error("can't connect to emc\n");
-	thisQuit();
-	exit(1);
+        rcs_print_error("can't connect to emc\n");
+        thisQuit();
+        exit(1);
     }
     // get current serial number, and save it for restoring when we quit
     // so as not to interfere with real operator interface

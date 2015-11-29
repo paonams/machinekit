@@ -314,6 +314,8 @@ void CMS_SERVER_REMOTE_TCP_PORT::run()
     rcs_print_debug(PRINT_CMS_CONFIG_INFO,
 	"running server for TCP port %d (connection_socket = %d).\n",
 	ntohs(server_socket_address.sin_port), connection_socket);
+    rcs_print("running server for TCP port %d (connection_socket = %d).\n",
+            ntohs(server_socket_address.sin_port), connection_socket);
 
     cms_server_count++;
     fd_set read_fd_set_copy, write_fd_set_copy;

@@ -264,12 +264,12 @@ void emcmotController(void *arg, long period)
                     int saved_level = rtapi_get_msg_level();
                     rtapi_set_msg_level(RTAPI_MSG_ALL);
                     reportError(_("Unexpected realtime delay: check dmesg for details."));
-                    rtapi_print_msg(RTAPI_MSG_WARN,
+                    rtapi_print_msg(RTAPI_MSG_ERR,
                         _("\nIn recent history there were\n"
                         "%ld, %ld, %ld, %ld, and %ld\n"
                         "elapsed clocks between calls to the motion controller.\n"),
                         cycles[0], cycles[1], cycles[2], cycles[3], cycles[4]);
-                    rtapi_print_msg(RTAPI_MSG_WARN,
+                    rtapi_print_msg(RTAPI_MSG_ERR,
                         _("This time, there were %ld which is so anomalously\n"
                         "large that it probably signifies a problem with your\n"
                         "realtime configuration.  For the rest of this run of\n"

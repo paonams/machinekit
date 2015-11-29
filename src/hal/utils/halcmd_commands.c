@@ -1273,7 +1273,9 @@ static int loadrt_cmd(const bool instantiate, // true if called from do_newinst
 		if((retval = (loadrt(mod_name, argv))) )
 		    return retval;
 	    }
-	    for(int y = 0, v = 0; y < n; y++ , v++) {
+	    int y =0, v = 0;
+	    //for(int y = 0, v = 0; y < n; y++ , v++) {
+	    for(; y < n; y++ , v++) {
 		// find unused instance name
 		sprintf(buff, "%s.%d", mod_name, v);
 		while(inst_name_exists(buff))

@@ -193,11 +193,11 @@ int rtapi_app_main(void)
     CHECK_NULL(rtapi_switch);
     CHECK_NULL(global_data);
 
-    HALDBG("initializing RT hal_lib support");
+    HALINFO("initializing RT hal_lib support");
 
     int retval = hal_xinit(TYPE_HALLIB, 0, 0, NULL, NULL, "hal_lib");
 
-    HALDBG("RT hal_lib support initialized rc=%d", retval);
+    HALINFO("RT hal_lib support initialized rc=%d", retval);
     return retval;
 }
 

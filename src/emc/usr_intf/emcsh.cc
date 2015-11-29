@@ -3443,6 +3443,7 @@ int emc_init(ClientData cd, Tcl_Interp *interp, int argc, const char **argv)
         setresult(interp,"error in argument list\n");
         return TCL_ERROR;
     }
+    rcs_print("src/emc/usr_intf/emcsh.cc main initLoad called\n");
     // get configuration information
     iniLoad(emc_inifile);
 

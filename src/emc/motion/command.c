@@ -423,9 +423,11 @@ check_stuff ( "before command_handler()" );
 	}
 
 /* printing of commands for troubleshooting */
-	rtapi_print_msg(RTAPI_MSG_DBG, "%d: CMD %d, code %3d ", emcmotStatus->heartbeat,
+/*	rtapi_print_msg(RTAPI_MSG_ERR, "%d: CMD %d, code %3d ", emcmotStatus->heartbeat,
 	    emcmotCommand->commandNum, emcmotCommand->command);
-
+*/
+	rtapi_print_msg(RTAPI_MSG_ERR, "%d: CMD %d, code (%s) ", emcmotStatus->heartbeat,
+	    emcmotCommand->commandNum, cmdCodeToString(emcmotCommand->command));
 	switch (emcmotCommand->command) {
 	case EMCMOT_ABORT:
 	    /* abort motion */
@@ -475,8 +477,8 @@ check_stuff ( "before command_handler()" );
 	    /* this command stops a single joint.  It is only usefull
 	       in free mode, so in coord or teleop mode it does
 	       nothing. */
-	    rtapi_print_msg(RTAPI_MSG_DBG, "AXIS_ABORT");
-	    rtapi_print_msg(RTAPI_MSG_DBG, " %d", joint_num);
+	    rtapi_print_msg(RTAPI_MSG_INFO, "AXIS_ABORT");
+	    rtapi_print_msg(RTAPI_MSG_INFO, " %d", joint_num);
 	    if (GET_MOTION_TELEOP_FLAG()) {
 		/* do nothing in teleop mode */
 	    } else if (GET_MOTION_COORD_FLAG()) {

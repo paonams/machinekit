@@ -56,6 +56,12 @@
 #include <X11/Xaw/SmeLine.h>
 #include <X11/Xaw/Dialog.h>
 
+#ifdef ENABLE_LOG_FILE
+#include <Log.h>
+#include <LogClass.h>
+LogClass logObject;
+#endif
+
 #define UPDATE_MSECS 100
 
 // the NML channels to the EMC task
@@ -4668,11 +4674,16 @@ int main(int argc, char **argv)
   Dimension posw;
   Font posfont;
 
+#ifdef ENABLE_LOG_FILE
+    std::string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/xemcLog");
+    logObject.initializeLog(file);
+#endif
   // process command line args
   if (0 != emcGetArgs(argc, argv)) {
     rcs_print_error("error in argument list\n");
     exit(1);
   }
+  rcs_print("src/emc/usr_intf/xemc.cc main called\n");
 
   // read INI file
   iniLoad(emc_inifile);

@@ -206,6 +206,8 @@ typedef int SOCKET;
 #endif // End of Windows and UNIX specific includes
 
 #include "mongoose.h"
+#include <unistd.h>
+#include <sys/syscall.h>
 
 #define MONGOOSE_VERSION "3.0"
 #define PASSWORDS_FILE_NAME ".htpasswd"
@@ -213,12 +215,23 @@ typedef int SOCKET;
 #define MAX_CGI_ENVIR_VARS 64
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 
+#define DEBUG
 #if defined(DEBUG)
 #define DEBUG_TRACE(x) do { \
+  rcs_print x;\
+  rcs_print ("\n");\
+} while (0)
+#else
+#define DEBUG_TRACE(x)
+#endif // DEBUG
+#if 0
+
+#if defined(DEBUG)
+#define DEBUG_TRACE1(x) do { \
   flockfile(stdout); \
-  printf("*** %lu.%p.%s.%d: ", \
+  printf("*** %lu.%p.%s [%zu] ", \
          (unsigned long) time(NULL), (void *) pthread_self(), \
-         __func__, __LINE__); \
+         __func__, syscall(SYS_gettid)); \
   printf x; \
   putchar('\n'); \
   fflush(stdout); \
@@ -227,6 +240,22 @@ typedef int SOCKET;
 #else
 #define DEBUG_TRACE(x)
 #endif // DEBUG
+
+#define DEBUG
+#if defined(DEBUG)
+#define DEBUG_TRACE(x) do { \
+  flockfile(stdout); \
+  printf("***[%zu] %s ", \
+         syscall(SYS_gettid), __func__); \
+  printf x; \
+  putchar('\n'); \
+  fflush(stdout); \
+  funlockfile(stdout); \
+} while (0)
+#else
+#define DEBUG_TRACE(x)
+#endif // DEBUG
+#endif
 
 // Darwin prior to 7.0 and Win32 do not have socklen_t
 #ifdef NO_SOCKLEN_T
@@ -479,6 +508,7 @@ const char **mg_get_valid_option_names(void) {
 
 static void *call_user(struct mg_connection *conn, enum mg_event event) {
   conn->request_info.user_data = conn->ctx->user_data;
+  DEBUG_TRACE(("event (%d)", event));
   return conn->ctx->user_callback == NULL ? NULL :
     conn->ctx->user_callback(event, conn, &conn->request_info);
 }
@@ -2529,6 +2559,7 @@ static void handle_file_request(struct mg_connection *conn, const char *path,
   conn->request_info.status_code = 200;
   range[0] = '\0';
 
+  DEBUG_TRACE(("path (%s)", path));
   if ((fp = mg_fopen(path, "rb")) == NULL) {
     send_http_error(conn, 500, http_500_error,
         "fopen(%s): %s", path, strerror(ERRNO));
@@ -2909,6 +2940,7 @@ static void handle_cgi_request(struct mg_connection *conn, const char *prog) {
 
   prepare_cgi_environment(conn, prog, &blk);
 
+  DEBUG_TRACE((" prog-> (%s)", prog));
   // CGI must be executed in its own directory. 'dir' must point to the
   // directory containing executable program, 'p' must point to the
   // executable program name relative to 'dir'.
@@ -3244,7 +3276,7 @@ static void handle_request(struct mg_connection *conn) {
   remove_double_dots_and_double_slashes(ri->uri);
   convert_uri_to_file_name(conn, ri->uri, path, sizeof(path));
 
-  DEBUG_TRACE(("%s", ri->uri));
+  DEBUG_TRACE(("uri -> %s method (%s)", ri->uri, ri->request_method));
   if (!check_authorization(conn, path)) {
     send_authorization_request(conn);
   } else if (call_user(conn, MG_NEW_REQUEST) != NULL) {
@@ -3258,8 +3290,10 @@ static void handle_request(struct mg_connection *conn) {
         !strcmp(ri->request_method, "DELETE")) &&
       (conn->ctx->config[PUT_DELETE_PASSWORDS_FILE] == NULL ||
        !is_authorized_for_put(conn))) {
+    DEBUG_TRACE(("send_authorization_request called"));
     send_authorization_request(conn);
   } else if (!strcmp(ri->request_method, "PUT")) {
+    DEBUG_TRACE(("put_file called"));
     put_file(conn, path);
   } else if (!strcmp(ri->request_method, "DELETE")) {
     if (mg_remove(path) == 0) {
@@ -3277,6 +3311,7 @@ static void handle_request(struct mg_connection *conn) {
   } else if (st.is_directory &&
              !substitute_index_file(conn, path, sizeof(path), &st)) {
     if (!mg_strcasecmp(conn->ctx->config[ENABLE_DIRECTORY_LISTING], "yes")) {
+      DEBUG_TRACE(("handle_directory_request called"));
       handle_directory_request(conn, path);
     } else {
       send_http_error(conn, 403, "Directory Listing Denied",
@@ -3288,9 +3323,11 @@ static void handle_request(struct mg_connection *conn) {
       send_http_error(conn, 501, "Not Implemented",
           "Method %s is not implemented", ri->request_method);
     } else {
+      DEBUG_TRACE(("handle_cgi_request called"));
       handle_cgi_request(conn, path);
     }
   } else if (match_extension(path, conn->ctx->config[SSI_EXTENSIONS])) {
+    DEBUG_TRACE(("handle_ssi_file_request called"));
     handle_ssi_file_request(conn, path);
   } else if (is_not_modified(conn, &st)) {
     send_http_error(conn, 304, "Not Modified", "");
@@ -3801,6 +3838,7 @@ static void process_new_connection(struct mg_connection *conn) {
 
   keep_alive_enabled = !strcmp(conn->ctx->config[ENABLE_KEEP_ALIVE], "yes");
 
+  DEBUG_TRACE((" called again !!!"));
   do {
     reset_per_request_attributes(conn);
 
@@ -3894,6 +3932,7 @@ static void worker_thread(struct mg_context *ctx) {
   conn->buf = (char *) (conn + 1);
   assert(conn != NULL);
 
+  DEBUG_TRACE((" worker thread created "));
   while (ctx->stop_flag == 0 && consume_socket(ctx, &conn->client)) {
     conn->birth_time = time(NULL);
     conn->ctx = ctx;
@@ -3931,6 +3970,7 @@ static void produce_socket(struct mg_context *ctx, const struct socket *sp) {
   (void) pthread_mutex_lock(&ctx->mutex);
 
   // If the queue is full, wait
+  DEBUG_TRACE(("BEFORE queued socket %d", sp->sock));
   while (ctx->sq_head - ctx->sq_tail >= (int) ARRAY_SIZE(ctx->queue)) {
     (void) pthread_cond_wait(&ctx->sq_empty, &ctx->mutex);
   }
@@ -3958,6 +3998,7 @@ static void accept_new_connection(const struct socket *listener,
     if (allowed) {
       // Put accepted socket structure into the queue
       DEBUG_TRACE(("accepted socket %d", accepted.sock));
+
       accepted.is_ssl = listener->is_ssl;
       accepted.is_proxy = listener->is_proxy;
       produce_socket(ctx, &accepted);
@@ -3975,6 +4016,7 @@ static void master_thread(struct mg_context *ctx) {
   struct socket *sp;
   int max_fd;
 
+  DEBUG_TRACE((" master thread created"));
   while (ctx->stop_flag == 0) {
     FD_ZERO(&read_set);
     max_fd = -1;

@@ -125,96 +125,96 @@ static int handle_xpub_in(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
     int retval;
 
     if (poller->socket == self->cmd) {
-	map = self->cmd_subscribers;
-	rail = "cmd";
+        map = self->cmd_subscribers;
+        rail = "cmd";
     } else {
-	map = self->response_subscribers;
-	rail = "response";
+        map = self->response_subscribers;
+        rail = "response";
     }
 
     zmsg_t *msg = zmsg_recv(poller->socket);
     size_t nframes = zmsg_size( msg);
 
     if (nframes == 1) {
-	// likely a subscribe/unsubscribe message
-	// a proper message needs at least three parts: src, dest, contents
-	    zframe_t *f = zmsg_pop(msg);
-	data = (char *) zframe_data(f);
-	assert(data);
-	topic = data + 1;
+        // likely a subscribe/unsubscribe message
+        // a proper message needs at least three parts: src, dest, contents
+        zframe_t *f = zmsg_pop(msg);
+        data = (char *) zframe_data(f);
+        assert(data);
+        topic = data + 1;
 
-	switch (*data) {
-	case '\001':
-	    map->insert(topic);
-	    rtapi_print_msg(RTAPI_MSG_DBG, "%s: rail %s: %s subscribed\n",
-			    progname, rail, topic);
-	    break;
+        switch (*data) {
+            case '\001':
+                map->insert(topic);
+                rtapi_print_msg(RTAPI_MSG_DBG, "%s: rail %s: %s subscribed\n",
+                        progname, rail, topic);
+                break;
 
-	case '\000':
-	    map->erase(topic);
-	    rtapi_print_msg(RTAPI_MSG_DBG, "%s: rail %s: %s unsubscribed\n",
-			    progname, rail, topic);
-	    break;
+            case '\000':
+                map->erase(topic);
+                rtapi_print_msg(RTAPI_MSG_DBG, "%s: rail %s: %s unsubscribed\n",
+                        progname, rail, topic);
+                break;
 
-	default:
-	    rtapi_print_msg(RTAPI_MSG_ERR, "%s: rail %s: invalid frame (tag=%d topic=%s)",
-			    progname, rail, *data, topic);
-	}
-	zframe_destroy(&f);
-	return 0;
+            default:
+                rtapi_print_msg(RTAPI_MSG_ERR, "%s: rail %s: invalid frame (tag=%d topic=%s)",
+                        progname, rail, *data, topic);
+        }
+        zframe_destroy(&f);
+        return 0;
     }
     if (nframes > 2) {
-	// forward
-	char *from  = zmsg_popstr(msg);
-	char *to  = zmsg_popstr(msg);
+        // forward
+        char *from  = zmsg_popstr(msg);
+        char *to  = zmsg_popstr(msg);
 
-	if (map->find(to) == map->end()) {
-	    char errmsg[100];
-	    snprintf(errmsg, sizeof(errmsg), "rail %s: no such destination: %s", rail, to);
-	    rtapi_print_msg(RTAPI_MSG_ERR, "%s: %s\n", progname,errmsg);
+        if (map->find(to) == map->end()) {
+            char errmsg[100];
+            snprintf(errmsg, sizeof(errmsg), "rail %s: no such destination: %s", rail, to);
+            rtapi_print_msg(RTAPI_MSG_ERR, "%s: %s\n", progname,errmsg);
 
-	    if (poller->socket == self->cmd) {
-		// command was directed to non-existent actor
-		// we wont get a reply from a non-existent actor
-		// so send error message on response rail instead:
+            if (poller->socket == self->cmd) {
+                // command was directed to non-existent actor
+                // we wont get a reply from a non-existent actor
+                // so send error message on response rail instead:
 
-		retval = zstr_sendm(self->response, from);  // originator
-		assert(retval == 0);
-		retval = zstr_sendm(self->response, to);    // destination
-		assert(retval == 0);
+                retval = zstr_sendm(self->response, from);  // originator
+                assert(retval == 0);
+                retval = zstr_sendm(self->response, to);    // destination
+                assert(retval == 0);
 
-		if (textreplies) {
-		    assert(zstr_send(self->response, errmsg) == 0);
-		    assert(retval == 0);
-		} else {
-		    pb::Container c;
-		    c.set_type(pb::MT_MESSAGEBUS_NO_DESTINATION);
-		    c.set_name(to);
-		    c.add_note(errmsg);
-		    zframe_t *errorframe = zframe_new(NULL, c.ByteSize());
-		    c.SerializeWithCachedSizesToArray(zframe_data(errorframe));
-		    retval = zframe_send(&errorframe, self->response, 0);
-		    assert(retval == 0);
-		}
-		zmsg_destroy(&msg);
-	    } // else: response to non-existent actor is dropped
-	} else {
-	    // forward
-	    if (debug)
-		rtapi_print_msg(RTAPI_MSG_ERR, "forward: %s->%s:\n", from,to);
+                if (textreplies) {
+                    assert(zstr_send(self->response, errmsg) == 0);
+                    assert(retval == 0);
+                } else {
+                    pb::Container c;
+                    c.set_type(pb::MT_MESSAGEBUS_NO_DESTINATION);
+                    c.set_name(to);
+                    c.add_note(errmsg);
+                    zframe_t *errorframe = zframe_new(NULL, c.ByteSize());
+                    c.SerializeWithCachedSizesToArray(zframe_data(errorframe));
+                    retval = zframe_send(&errorframe, self->response, 0);
+                    assert(retval == 0);
+                }
+                zmsg_destroy(&msg);
+            } // else: response to non-existent actor is dropped
+        } else {
+            // forward
+            if (debug)
+                rtapi_print_msg(RTAPI_MSG_ERR, "forward: %s->%s:\n", from,to);
 
-	    zstr_sendm(poller->socket, to);          // topic
-	    zstr_sendm(poller->socket, from);        // destination
-	    zmsg_send(&msg, poller->socket);
-	}
-	free(from);
-	free(to);
+            zstr_sendm(poller->socket, to);          // topic
+            zstr_sendm(poller->socket, from);        // destination
+            zmsg_send(&msg, poller->socket);
+        }
+        free(from);
+        free(to);
 
     } else {
-	rtapi_print_msg(RTAPI_MSG_ERR, "%s: rail %s: short message (%zu frames)",
-			progname, rail, nframes);
-	zmsg_dump_to_stream(msg, stderr);
-	zmsg_destroy(&msg);
+        rtapi_print_msg(RTAPI_MSG_ERR, "%s: rail %s: short message (%zu frames)",
+                progname, rail, nframes);
+        zmsg_dump_to_stream(msg, stderr);
+        zmsg_destroy(&msg);
     }
     return 0;
 }
@@ -228,10 +228,10 @@ static int handle_signal(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
 
     s = read(poller->fd, &fdsi, sizeof(struct signalfd_siginfo));
     if (s != sizeof(struct signalfd_siginfo)) {
-	perror("read");
+        perror("read");
     }
     rtapi_print_msg(RTAPI_MSG_ERR, "%s: signal %d - '%s' received\n",
-			progname, fdsi.ssi_signo, strsignal(fdsi.ssi_signo));
+            progname, fdsi.ssi_signo, strsignal(fdsi.ssi_signo));
     self->interrupted = true;
     return -1; // exit reactor with -1
 }
@@ -251,13 +251,13 @@ static int mainloop(msgbusd_self_t *self)
     zloop_poller(self->loop, &response_poller, handle_xpub_in, self);
 
     do {
-	retval = zloop_start(self->loop);
+        retval = zloop_start(self->loop);
     } while  (!(retval || self->interrupted));
 
     rtapi_print_msg(RTAPI_MSG_INFO,
-		    "%s: exiting mainloop (%s)\n",
-		    progname,
-		    self->interrupted ? "interrupted": "reactor exited");
+            "%s: exiting mainloop (%s)\n",
+            progname,
+            self->interrupted ? "interrupted": "reactor exited");
 
     return 0;
 }
@@ -305,9 +305,9 @@ static int zmq_setup(msgbusd_self_t *self)
 
     // register Avahi poll adapter
     if (self->remote && !(self->av_loop = avahi_czmq_poll_new(self->loop))) {
-	rtapi_print_msg(RTAPI_MSG_ERR, "%s: zeroconf: Failed to create avahi event loop object.",
-			progname);
-	return -1;
+        rtapi_print_msg(RTAPI_MSG_ERR, "%s: zeroconf: Failed to create avahi event loop object.",
+                progname);
+        return -1;
     }
     return 0;
 }
@@ -321,68 +321,68 @@ static int mb_zeroconf_announce(msgbusd_self_t *self)
 
     uuid_unparse(self->process_uuid, puuid);
     if (gethostname(hostname, sizeof(hostname)) < 0) {
-	rtapi_print_msg(RTAPI_MSG_ERR,
-			"%s: gethostname() failed ?! %s\n",
-			progname, strerror(errno));
-	return -1;
+        rtapi_print_msg(RTAPI_MSG_ERR,
+                "%s: gethostname() failed ?! %s\n",
+                progname, strerror(errno));
+        return -1;
     }
     strtok(hostname, "."); // get rid of the domain name
 
     if (self->remote)
-	snprintf(uri,sizeof(uri), "tcp://%s.local.:%d",hostname, self->command_port);
+        snprintf(uri,sizeof(uri), "tcp://%s.local.:%d",hostname, self->command_port);
 
     snprintf(name,sizeof(name), "Messagebus command service on %s.local pid %d",
-	     hostname, getpid());
+            hostname, getpid());
     self->command_publisher = zeroconf_service_announce(name,
-							MACHINEKIT_DNSSD_SERVICE_TYPE,
-							MSGBUSCMD_DNSSD_SUBTYPE,
-							self->command_port,
-							self->remote ? uri :
-							(char *)self->command_dsn,
-							self->service_uuid,
-							self->process_uuid_str,
-							"mbcmd",
-							NULL,
-							self->av_loop);
+            MACHINEKIT_DNSSD_SERVICE_TYPE,
+            MSGBUSCMD_DNSSD_SUBTYPE,
+            self->command_port,
+            self->remote ? uri :
+            (char *)self->command_dsn,
+            self->service_uuid,
+            self->process_uuid_str,
+            "mbcmd",
+            NULL,
+            self->av_loop);
     if (self->command_publisher == NULL) {
-	rtapi_print_msg(RTAPI_MSG_ERR,
-			"%s: failed to start zeroconf Messagebus command publisher\n",
-			progname);
-	return -1;
+        rtapi_print_msg(RTAPI_MSG_ERR,
+                "%s: failed to start zeroconf Messagebus command publisher\n",
+                progname);
+        return -1;
     }
 
     if (self->remote)
-	snprintf(uri,sizeof(uri), "tcp://%s.local.:%d",hostname, self->response_port);
+        snprintf(uri,sizeof(uri), "tcp://%s.local.:%d",hostname, self->response_port);
     snprintf(name,sizeof(name), "Messagebus response service on %s.local pid %d",
-	     hostname, getpid());
+            hostname, getpid());
 
     self->response_publisher = zeroconf_service_announce(name,
-							 MACHINEKIT_DNSSD_SERVICE_TYPE,
-							 MSGBUSRESP_DNSSD_SUBTYPE,
-							 self->response_port,
-							 self->remote ? uri :
-							 (char *)self->response_dsn,
-							 self->service_uuid,
-							 self->process_uuid_str,
-							 "mbresp",
-							 NULL,
-							 self->av_loop);
+            MACHINEKIT_DNSSD_SERVICE_TYPE,
+            MSGBUSRESP_DNSSD_SUBTYPE,
+            self->response_port,
+            self->remote ? uri :
+            (char *)self->response_dsn,
+            self->service_uuid,
+            self->process_uuid_str,
+            "mbresp",
+            NULL,
+            self->av_loop);
     if (self->response_publisher == NULL) {
-	rtapi_print_msg(RTAPI_MSG_ERR,
-			"%s: failed to start zeroconf Messagebus response publisher\n",
-			progname);
-	return -1;
+        rtapi_print_msg(RTAPI_MSG_ERR,
+                "%s: failed to start zeroconf Messagebus response publisher\n",
+                progname);
+        return -1;
     }
     return 0;
 }
 
-int
+    int
 mb_zeroconf_withdraw(msgbusd_self_t *self)
 {
     if (self->command_publisher)
-	zeroconf_service_withdraw(self->command_publisher);
+        zeroconf_service_withdraw(self->command_publisher);
     if (self->response_publisher)
-	zeroconf_service_withdraw(self->response_publisher);
+        zeroconf_service_withdraw(self->response_publisher);
 
     // deregister poll adapter
     if (self->av_loop)
@@ -430,24 +430,24 @@ static int rtproxy_setup(msgbusd_self_t *self)
 static int hal_setup(msgbusd_self_t *self)
 {
     if ((comp_id = hal_init(progname)) < 0) {
-	rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: hal_init(%s) failed: HAL error code=%d\n",
-			progname, progname, comp_id);
-	return -1;
+        rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: hal_init(%s) failed: HAL error code=%d\n",
+                progname, progname, comp_id);
+        return -1;
     }
     hal_ready(comp_id);
 
     {
-	int zmajor, zminor, zpatch, pbmajor, pbminor, pbpatch;
-	zmq_version (&zmajor, &zminor, &zpatch);
-	pbmajor = GOOGLE_PROTOBUF_VERSION / 1000000;
-	pbminor = (GOOGLE_PROTOBUF_VERSION / 1000) % 1000;
-	pbpatch = GOOGLE_PROTOBUF_VERSION % 1000;
-	rtapi_print_msg(RTAPI_MSG_DBG,
-	       "%s: startup ØMQ=%d.%d.%d protobuf=%d.%d.%d",
-	       progname, zmajor, zminor, zpatch, pbmajor, pbminor, pbpatch);
+        int zmajor, zminor, zpatch, pbmajor, pbminor, pbpatch;
+        zmq_version (&zmajor, &zminor, &zpatch);
+        pbmajor = GOOGLE_PROTOBUF_VERSION / 1000000;
+        pbminor = (GOOGLE_PROTOBUF_VERSION / 1000) % 1000;
+        pbpatch = GOOGLE_PROTOBUF_VERSION % 1000;
+        rtapi_print_msg(RTAPI_MSG_DBG,
+                "%s: startup ØMQ=%d.%d.%d protobuf=%d.%d.%d",
+                progname, zmajor, zminor, zpatch, pbmajor, pbminor, pbpatch);
 
-	rtapi_print_msg(RTAPI_MSG_DBG, "%s: talking Messagebus on cmd='%s' response='%s'",
-			progname, self->command_dsn, self->response_dsn);
+        rtapi_print_msg(RTAPI_MSG_DBG, "%s: talking Messagebus on cmd='%s' response='%s'",
+                progname, self->command_dsn, self->response_dsn);
 
     }
     return 0;
@@ -456,7 +456,7 @@ static int hal_setup(msgbusd_self_t *self)
 static void sigaction_handler(int sig, siginfo_t *si, void *uctx)
 {
     syslog_async(LOG_ERR,"signal %d - '%s' received, dumping core (current dir=%s)",
-		    sig, strsignal(sig), get_current_dir_name());
+            sig, strsignal(sig), get_current_dir_name());
     closelog_async(); // let syslog_async drain
     sleep(1);
     // reset handler for current signal to default
@@ -467,7 +467,7 @@ static void sigaction_handler(int sig, siginfo_t *si, void *uctx)
 }
 
 // pull global values from MACHINEKIT_INI
-static int
+    static int
 read_global_config(msgbusd_self_t *self)
 {
     const char *s, *mkinifile;
@@ -476,49 +476,49 @@ read_global_config(msgbusd_self_t *self)
     uuid_t uutmp;
 
     if ((mkinifile = getenv(mkini)) == NULL) {
-	rtapi_print_msg(RTAPI_MSG_ERR, "%s: FATAL - '%s' missing in environment\n",
-		     progname, mkini);
-	return -1;
+        rtapi_print_msg(RTAPI_MSG_ERR, "%s: FATAL - '%s' missing in environment\n",
+                progname, mkini);
+        return -1;
     }
     if ((inifp = fopen(mkinifile,"r")) == NULL) {
-	rtapi_print_msg(RTAPI_MSG_ERR, "%s: cant open inifile '%s'\n",
-		     progname,mkinifile);
+        rtapi_print_msg(RTAPI_MSG_ERR, "%s: cant open inifile '%s'\n",
+                progname,mkinifile);
     }
 
     str_inidefault(&self->service_uuid, inifp, "MKUUID", "MACHINEKIT");
 
     if (self->service_uuid == NULL) {
-	rtapi_print_msg(RTAPI_MSG_ERR,
-		     "%s: no service UUID (-R <uuid> or MACHINEKIT_INI [MACHINEKIT]MKUUID) present\n",
-		     progname);
-	    return -1;
+        rtapi_print_msg(RTAPI_MSG_ERR,
+                "%s: no service UUID (-R <uuid> or MACHINEKIT_INI [MACHINEKIT]MKUUID) present\n",
+                progname);
+        return -1;
     }
     if (uuid_parse(self->service_uuid, uutmp)) {
-	rtapi_print_msg(RTAPI_MSG_ERR,
-		     "%s: service UUID: syntax error: '%s'",
-		     progname,self->service_uuid);
-	return -1;
+        rtapi_print_msg(RTAPI_MSG_ERR,
+                "%s: service UUID: syntax error: '%s'",
+                progname,self->service_uuid);
+        return -1;
     }
     iniFindInt(inifp, "REMOTE", "MACHINEKIT", &self->remote);
     if (self->remote) {
-	if ((s = iniFind(inifp, "INTERFACES", "MACHINEKIT"))) {
+        if ((s = iniFind(inifp, "INTERFACES", "MACHINEKIT"))) {
 
-	    char ifname[LINELEN], ip[LINELEN];
+            char ifname[LINELEN], ip[LINELEN];
 
-	    // pick a preferred interface
-	    if (parse_interface_prefs(s,  ifname, ip, &self->ifIndex) == 0) {
-		self->interface = strdup(ifname);
-		self->ipaddr = strdup(ip);
-		syslog_async(LOG_INFO, "%s %s: using preferred interface %s/%s\n",
-			     progname, mkini,
-			     self->interface, self->ipaddr);
-	    } else {
-		rtapi_print_msg(RTAPI_MSG_ERR, "%s %s: INTERFACES='%s'"
-			     " - cant determine preferred interface, using %s/%s\n",
-			     progname, mkini, s,
-			     self->interface, self->ipaddr);
-	    }
-	}
+            // pick a preferred interface
+            if (parse_interface_prefs(s,  ifname, ip, &self->ifIndex) == 0) {
+                self->interface = strdup(ifname);
+                self->ipaddr = strdup(ip);
+                syslog_async(LOG_INFO, "%s %s: using preferred interface %s/%s\n",
+                        progname, mkini,
+                        self->interface, self->ipaddr);
+            } else {
+                rtapi_print_msg(RTAPI_MSG_ERR, "%s %s: INTERFACES='%s'"
+                        " - cant determine preferred interface, using %s/%s\n",
+                        progname, mkini, s,
+                        self->interface, self->ipaddr);
+            }
+        }
     }
     fclose(inifp);
     return 0;
@@ -529,38 +529,38 @@ static int read_config(msgbusd_self_t *self, const char *inifile)
     const char *s;
 
     if (inifile && (self->inifp = fopen(inifile,"r")) == NULL) {
-	rtapi_print_msg(RTAPI_MSG_ERR, "%s: cant open inifile '%s'\n",
-			progname, inifile);
+        rtapi_print_msg(RTAPI_MSG_ERR, "%s: cant open inifile '%s'\n",
+                progname, inifile);
     } else {
-	iniFindInt(self->inifp, "DEBUG", section, &debug);
-	iniFindInt(self->inifp, "TEXTREPLIES", section, &textreplies);
+        iniFindInt(self->inifp, "DEBUG", section, &debug);
+        iniFindInt(self->inifp, "TEXTREPLIES", section, &textreplies);
 
-	if ((self->cmd_uri == NULL) && (s = iniFind(self->inifp, "CMD", section)))
-	    self->cmd_uri = strdup(s);
+        if ((self->cmd_uri == NULL) && (s = iniFind(self->inifp, "CMD", section)))
+            self->cmd_uri = strdup(s);
 
-	if ((self->response_uri == NULL) && (s = iniFind(self->inifp, "RESPONSE", section)))
-	    self->response_uri = strdup(s);
+        if ((self->response_uri == NULL) && (s = iniFind(self->inifp, "RESPONSE", section)))
+            self->response_uri = strdup(s);
     }
 
     // finalize the URI's if ephemeral to be used
     char uri[100];
     if (self->cmd_uri == NULL) {
 
-	if (self->remote)
-	    snprintf(uri, sizeof(uri), "tcp://%s:*",self->ipaddr);
-	else
-	    snprintf(uri, sizeof(uri), ZMQIPC_FORMAT,
-		     RUNDIR, instance_id, "mbcmd", self->service_uuid);
-	self->cmd_uri = strdup(uri);
+        if (self->remote)
+            snprintf(uri, sizeof(uri), "tcp://%s:*",self->ipaddr);
+        else
+            snprintf(uri, sizeof(uri), ZMQIPC_FORMAT,
+                    RUNDIR, instance_id, "mbcmd", self->service_uuid);
+        self->cmd_uri = strdup(uri);
     }
     if (self->response_uri == NULL) {
 
-	if (self->remote)
-	    snprintf(uri, sizeof(uri), "tcp://%s:*",self->ipaddr);
-	else
-	    snprintf(uri, sizeof(uri), ZMQIPC_FORMAT,
-		     RUNDIR, instance_id, "mbresp", self->service_uuid);
-	self->response_uri = strdup(uri);
+        if (self->remote)
+            snprintf(uri, sizeof(uri), "tcp://%s:*",self->ipaddr);
+        else
+            snprintf(uri, sizeof(uri), ZMQIPC_FORMAT,
+                    RUNDIR, instance_id, "mbresp", self->service_uuid);
+        self->response_uri = strdup(uri);
     }
     return 0;
 }
@@ -574,20 +574,20 @@ static int parse_proxy(const char *s)
 static void usage(void) {
     printf("Usage:  messagebus [options]\n");
     printf("This is a userspace HAL program, typically loaded "
-	   "using the halcmd \"loadusr\" command:\n"
-	   "    loadusr messagebus [options]\n"
-	   "Options are:\n"
-	   "-I or --ini <inifile>\n"
-	   "    Use <inifile> (default: take ini filename from environment"
-	   " variable INI_FILE_NAME)\n"
-	   "-S or --section <section-name> (default 8)\n"
-	   "    Read parameters from <section_name> (default 'VFS11')\n"
-	   "-d --debug\n"
-	   "    increase debug level.\n"
-	   "-t or --textreply\n"
-	   "    send error messages on response-out as strings (default protobuf)\n"
-	   "-d or --debug\n"
-	   "    Turn on event debugging messages.\n");
+            "using the halcmd \"loadusr\" command:\n"
+            "    loadusr messagebus [options]\n"
+            "Options are:\n"
+            "-I or --ini <inifile>\n"
+            "    Use <inifile> (default: take ini filename from environment"
+            " variable INI_FILE_NAME)\n"
+            "-S or --section <section-name> (default 8)\n"
+            "    Read parameters from <section_name> (default 'VFS11')\n"
+            "-d --debug\n"
+            "    increase debug level.\n"
+            "-t or --textreply\n"
+            "    send error messages on response-out as strings (default protobuf)\n"
+            "-d or --debug\n"
+            "    Turn on event debugging messages.\n");
 }
 
 
@@ -602,45 +602,47 @@ int main (int argc, char *argv[])
     progname = argv[0];
 
     inifile = getenv("INI_FILE_NAME");
+    std::cout<<"src/machinetalk/messagebus/messagebus.cc main progname "
+	<<progname<<" inifile "<<inifile<<"\n";
 
     while ((opt = getopt_long(argc, argv, option_string,
-			      long_options, NULL)) != -1) {
-	switch(opt) {
-	case 'd':
-	    debug++;
-	    break;
-	case 't':
-	    textreplies++;
-	    break;
-	case 'S':
-	    section = optarg;
-	    break;
-	case 'I':
-	    inifile = optarg;
-	    break;
-	case 'r':
-	    self.response_uri = optarg;
-	    break;
-	case 'c':
-	    self.cmd_uri = optarg;
-	    break;
-	case 'p':
-	    parse_proxy(optarg);
-	    break;
+                    long_options, NULL)) != -1) {
+        switch(opt) {
+            case 'd':
+                debug++;
+                break;
+            case 't':
+                textreplies++;
+                break;
+            case 'S':
+                section = optarg;
+                break;
+            case 'I':
+                inifile = optarg;
+                break;
+            case 'r':
+                self.response_uri = optarg;
+                break;
+            case 'c':
+                self.cmd_uri = optarg;
+                break;
+            case 'p':
+                parse_proxy(optarg);
+                break;
 
-	case 'h':
-	default:
-	    usage();
-	    exit(0);
-	}
+            case 'h':
+            default:
+                usage();
+                exit(0);
+        }
     }
     openlog("", LOG_NDELAY , logopt);
 
     if (read_global_config(&self))
-	exit(1);
+        exit(1);
 
     if (read_config(&self, inifile))
-	exit(1);
+        exit(1);
 
     uuid_generate_time(self.process_uuid);
     uuid_unparse(self.process_uuid, self.process_uuid_str);
@@ -653,11 +655,11 @@ int main (int argc, char *argv[])
 
     signal_fd = setup_signals(sigaction_handler, SIGINT, SIGQUIT, SIGKILL, SIGTERM, -1);
     if (signal_fd < 0)
-	exit(1);
+        exit(1);
 
     if (self.remote) {
-	retval = mb_zeroconf_announce(&self);
-	if (retval) exit(retval);
+        retval = mb_zeroconf_announce(&self);
+        if (retval) exit(retval);
     }
     retval = rtproxy_setup(&self);
     if (retval) exit(retval);
@@ -665,12 +667,12 @@ int main (int argc, char *argv[])
     mainloop(&self);
 
     if (self.remote)
-	mb_zeroconf_withdraw(&self);
+        mb_zeroconf_withdraw(&self);
 
     // shutdown zmq context
     zctx_destroy (&self.context);
 
     if (comp_id)
-	hal_exit(comp_id);
+        hal_exit(comp_id);
     exit(0);
 }

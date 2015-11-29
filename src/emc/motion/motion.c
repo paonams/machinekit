@@ -202,7 +202,7 @@ int rtapi_app_main(void)
 {
     int retval;
     // rtapi_set_msg_level(RTAPI_MSG_DBG);
-    rtapi_print_msg(RTAPI_MSG_INFO, "MOTION: init_module() starting...\n");
+    rtapi_print_msg(RTAPI_MSG_ERR, "MOTION: init_module() starting...\n");
 
     /* set flag */
     first_pass = 1;
@@ -258,7 +258,7 @@ int rtapi_app_main(void)
 	return -1;
     }
 
-    rtapi_print_msg(RTAPI_MSG_INFO, "MOTION: init_module() complete\n");
+    rtapi_print_msg(RTAPI_MSG_ERR, "MOTION: init_module() complete\n");
 
     hal_ready(mot_comp_id);
 
@@ -314,7 +314,7 @@ static int init_hal_io(void)
     int n, retval;
     joint_hal_t *joint_data;
 
-    rtapi_print_msg(RTAPI_MSG_INFO, "MOTION: init_hal_io() starting...\n");
+    rtapi_print_msg(RTAPI_MSG_ERR, "MOTION: init_hal_io() starting...\n");
 
     /* allocate shared memory for machine data */
     emcmot_hal_data = hal_malloc(sizeof(emcmot_hal_data_t));
@@ -705,7 +705,7 @@ static int init_hal_io(void)
     }
 
     /* Done! */
-    rtapi_print_msg(RTAPI_MSG_INFO,
+    rtapi_print_msg(RTAPI_MSG_ERR,
 	"MOTION: init_hal_io() complete, %d axes.\n", n);
     return 0;
 
@@ -915,7 +915,7 @@ static int init_comm_buffers(void)
     emcmot_joint_t *joint;
     int retval;
 
-    rtapi_print_msg(RTAPI_MSG_INFO,
+    rtapi_print_msg(RTAPI_MSG_ERR,
 	"MOTION: init_comm_buffers() starting...\n");
 
     emcmotStruct = 0;
@@ -1212,7 +1212,7 @@ static int init_comm_buffers(void)
 
     emcmotStatus->tail = 0;
 
-    rtapi_print_msg(RTAPI_MSG_INFO, "MOTION: init_comm_buffers() complete\n");
+    rtapi_print_msg(RTAPI_MSG_ERR, "MOTION: init_comm_buffers() complete\n");
     return 0;
 }
 
@@ -1225,7 +1225,7 @@ static int init_threads(void)
     int servo_base_ratio;
     int retval;
 
-    rtapi_print_msg(RTAPI_MSG_INFO, "MOTION: init_threads() starting...\n");
+    rtapi_print_msg(RTAPI_MSG_ERR, "MOTION: init_threads() starting...\n");
 
     /* if base_period not specified, assume same as servo_period */
     if (base_period_nsec == 0) {
@@ -1300,7 +1300,7 @@ static int init_threads(void)
     setServoCycleTime(servo_period_nsec * 1e-9);
     setTrajCycleTime(traj_period_nsec * 1e-9);
 
-    rtapi_print_msg(RTAPI_MSG_INFO, "MOTION: init_threads() complete\n");
+    rtapi_print_msg(RTAPI_MSG_ERR, "MOTION: init_threads() complete\n");
     return 0;
 }
 
@@ -1316,7 +1316,7 @@ static int setTrajCycleTime(double secs)
 {
     static int t;
 
-    rtapi_print_msg(RTAPI_MSG_INFO,
+    rtapi_print_msg(RTAPI_MSG_ERR,
 	"MOTION: setting Traj cycle time to %ld nsecs\n", (long) (secs * 1e9));
 
     /* make sure it's not zero */
@@ -1354,7 +1354,7 @@ static int setServoCycleTime(double secs)
 {
     static int t;
 
-    rtapi_print_msg(RTAPI_MSG_INFO,
+    rtapi_print_msg(RTAPI_MSG_ERR,
 	"MOTION: setting Servo cycle time to %ld nsecs\n", (long) (secs * 1e9));
 
     /* make sure it's not zero */
@@ -1448,3 +1448,155 @@ static int init_shared(tp_shared_t *tps,
     tps->GetRotaryIsUnlocked = emcmotGetRotaryIsUnlocked;
     return 0;
 }
+
+
+/* helper utils */
+
+char *  cmdCodeToString(cmd_code_t code)
+{
+    switch(code){
+	case EMCMOT_ABORT:
+	    return "EMCMOT_ABORT";
+	case EMCMOT_AXIS_ABORT:
+	    return "EMCMOT_AXIS_ABORT";
+	case EMCMOT_ENABLE:
+	    return "EMCMOT_ENABLE";
+	case EMCMOT_DISABLE:
+	    return "EMCMOT_DISABLE";
+	case EMCMOT_ENABLE_AMPLIFIER:
+	    return "EMCMOT_ENABLE_AMPLIFIER";
+	case EMCMOT_DISABLE_AMPLIFIER:
+	    return "EMCMOT_DISABLE_AMPLIFIER";
+	case EMCMOT_ENABLE_WATCHDOG:
+	    return "EMCMOT_ENABLE_WATCHDOG";
+	case EMCMOT_DISABLE_WATCHDOG:
+	    return "EMCMOT_DISABLE_WATCHDOG";
+	case EMCMOT_ACTIVATE_JOINT:
+	    return "EMCMOT_ACTIVATE_JOINT";
+	case EMCMOT_DEACTIVATE_JOINT:
+	    return "EMCMOT_DEACTIVATE_JOINT";
+
+	case EMCMOT_PAUSE:
+	    return "EMCMOT_PAUSE";
+	case EMCMOT_RESUME:
+	    return "EMCMOT_RESUME";
+	case EMCMOT_STEP:
+	    return "EMCMOT_STEP";
+	case EMCMOT_FREE:
+	    return "EMCMOT_FREE";
+	case EMCMOT_COORD:
+	    return "EMCMOT_COORD";
+	case EMCMOT_TELEOP:
+	    return "EMCMOT_TELEOP";
+
+	case EMCMOT_SPINDLE_SCALE:
+	    return "EMCMOT_SPINDLE_SCALE";
+	case EMCMOT_SS_ENABLE:
+	    return "EMCMOT_SS_ENABLE";
+	case EMCMOT_FEED_SCALE:
+	    return "EMCMOT_FEED_SCALE";
+	case EMCMOT_FS_ENABLE:
+	    return "EMCMOT_FS_ENABLE";
+	case EMCMOT_FH_ENABLE:
+	    return "EMCMOT_FH_ENABLE";
+	case EMCMOT_AF_ENABLE:         /* enable/disable adaptive feedrate */
+	    return "EMCMOT_AF_ENABLE";
+	case EMCMOT_OVERRIDE_LIMITS:   /* temporarily ignore limits until jog done */
+	    return "EMCMOT_OVERRIDE_LIMITS";
+
+	case EMCMOT_HOME:              /* home a joint or all joints */
+	    return "EMCMOT_HOME";
+	case EMCMOT_UNHOME:            /* unhome a joint or all joints*/
+	    return "EMCMOT_UNHOME";
+	case EMCMOT_JOG_CONT:          /* continuous jog */
+	    return "EMCMOT_JOG_CONT";
+	case EMCMOT_JOG_INCR:          /* incremental jog */
+	    return "EMCMOT_JOG_INCR";
+	case EMCMOT_JOG_ABS:           /* absolute jog */
+	    return "EMCMOT_JOG_ABS";
+	case EMCMOT_SET_LINE:          /* queue up a linear move */
+	    return "EMCMOT_SET_LINE";
+	case EMCMOT_SET_CIRCLE:        /* queue up a circular move */
+	    return "EMCMOT_SET_CIRCLE";
+	case EMCMOT_SET_TELEOP_VECTOR: /* Move at a given velocity but in
+					  world Cartesian coordinates, not
+					  in joint space like EMCMOT_JOG_* */
+	    return "EMCMOT_SET_TELEOP_VECTOR";
+	case EMCMOT_CLEAR_PROBE_FLAGS: /* clears probeTripped flag */
+	    return "EMCMOT_CLEAR_PROBE_FLAGS";
+	case EMCMOT_PROBE:             /* go to pos, stop if probe trips, record
+					  trip pos */
+	    return "EMCMOT_PROBE";
+	case EMCMOT_RIGID_TAP:         /* go to pos, with sync to spindle speed,
+					  then return to initial pos */
+	    return "EMCMOT_RIGID_TAP";
+	case EMCMOT_SET_POSITION_LIMITS:  /* set the joint position +/- limits */
+	    return "EMCMOT_SET_POSITION_LIMITS";
+	case EMCMOT_SET_BACKLASH:         /* set the joint backlash */
+	    return "EMCMOT_SET_BACKLASH";
+	case EMCMOT_SET_MIN_FERROR:       /* minimum following error, input units */
+	    return "EMCMOT_SET_MIN_FERROR";
+	case EMCMOT_SET_MAX_FERROR:       /* maximum following error, input units */
+	    return "EMCMOT_SET_MAX_FERROR";
+	case EMCMOT_SET_VEL:              /* set the velocity for subsequent moves */
+	    return "EMCMOT_SET_VEL";
+	case EMCMOT_SET_VEL_LIMIT:        /* set the max vel for all moves (tooltip) */
+	    return "EMCMOT_SET_VEL_LIMIT";
+	case EMCMOT_SET_JOINT_VEL_LIMIT:  /* set the max joint vel */
+	    return "EMCMOT_SET_JOINT_VEL_LIMIT";
+	case EMCMOT_SET_JOINT_ACC_LIMIT:  /* set the max joint accel */
+	    return "EMCMOT_SET_JOINT_ACC_LIMIT";
+	case EMCMOT_SET_ACC:              /* set the max accel for moves (tooltip) */
+	    return "EMCMOT_SET_JOINT_ACC_LIMIT";
+	case EMCMOT_SET_TERM_COND:        /* set termination condition (stop, blend) */
+	    return "EMCMOT_SET_TERM_COND";
+	case EMCMOT_SET_NUM_AXES:         /* set the number of joints */ //FIXME-AJ: function needs to get renamed
+	    return "EMCMOT_SET_NUM_AXES";
+	case EMCMOT_SET_WORLD_HOME:       /* set pose for world home */
+	    return "EMCMOT_SET_WORLD_HOME";
+	case EMCMOT_SET_HOMING_PARAMS:    /* sets joint homing parameters */
+	    return "EMCMOT_SET_HOMING_PARAMS";
+	case EMCMOT_SET_DEBUG:            /* sets the debug level */
+	    return "EMCMOT_SET_DEBUG";
+	case EMCMOT_SET_DOUT:             /* sets or unsets a DIO, this can be imediate or synched with motion */
+	    return "EMCMOT_SET_DOUT";
+	case EMCMOT_SET_AOUT:             /* sets or unsets a AIO, this can be imediate or synched with motion */
+	    return "EMCMOT_SET_AOUT";
+	case EMCMOT_SET_SPINDLESYNC:      /* synchronize motion to spindle encoder */
+	    return "EMCMOT_SET_SPINDLESYNC";
+
+	case EMCMOT_SPINDLE_ON:               /* start the spindle */
+	    return "EMCMOT_SPINDLE_ON";
+	case EMCMOT_SPINDLE_OFF:              /* stop the spindle */
+	    return "EMCMOT_SPINDLE_OFF";
+	case EMCMOT_SPINDLE_INCREASE:         /* spindle faster */
+	    return "EMCMOT_SPINDLE_INCREASE";
+	case EMCMOT_SPINDLE_DECREASE:         /* spindle slower */
+	    return "EMCMOT_SPINDLE_DECREASE";
+	case EMCMOT_SPINDLE_BRAKE_ENGAGE:     /* engage the spindle brake */
+	    return "EMCMOT_SPINDLE_BRAKE_ENGAGE";
+	case EMCMOT_SPINDLE_BRAKE_RELEASE:    /* release the spindle brake */
+	    return "EMCMOT_SPINDLE_BRAKE_RELEASE";
+	case EMCMOT_SPINDLE_ORIENT:           /* orient the spindle */
+	    return "EMCMOT_SPINDLE_ORIENT";
+	case EMCMOT_SET_MOTOR_OFFSET:         /* set the offset between joint and motor */
+	    return "EMCMOT_SET_MOTOR_OFFSET";
+	case EMCMOT_SET_JOINT_COMP:           /* set a compensation triplet for a joint (nominal, forw., rev.) */
+	    return "EMCMOT_SET_JOINT_COMP";
+	case EMCMOT_SET_OFFSET:               /* set tool offsets */
+	    return "EMCMOT_SET_OFFSET";
+	case EMCMOT_SET_MAX_FEED_OVERRIDE:
+	    return "EMCMOT_SET_MAX_FEED_OVERRIDE";
+	case EMCMOT_SETUP_ARC_BLENDS:
+	    return "EMCMOT_SETUP_ARC_BLENDS";
+	default:
+	    return "UNKNOWN";
+    }
+}
+
+
+
+
+
+
+

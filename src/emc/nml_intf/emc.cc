@@ -472,6 +472,60 @@ int emcFormat(NMLTYPE type, void *buffer, CMS * cms)
     return 1;
 }
 
+#ifdef PLDTECH_CHANGES
+const char *emc_task_state_symbol_lookup(EMC_TASK_STATE_ENUM state)
+{
+    switch(state){
+        case EMC_TASK_STATE_ESTOP:
+            return "EMS_TASK_STATE_ESTOP";
+        case EMC_TASK_STATE_ESTOP_RESET:
+            return "EMC_TASK_STATE_ESTOP_RESET";
+        case EMC_TASK_STATE_OFF:
+            return "EMC_TASK_STATE_OFF";
+        case EMC_TASK_STATE_ON:
+            return "EMC_TASK_STATE_ON";
+    }
+    return "EMS_TASK_STATE_UNKNOWN";
+}
+
+const char *emc_task_mode_symbol_lookup(EMC_TASK_MODE_ENUM mode)
+{
+    switch(mode){
+        case EMC_TASK_MODE_MANUAL:
+            return "EMC_TASK_MODE_MANUAL";
+        case EMC_TASK_MODE_AUTO:
+            return "EMC_TASK_MODE_AUTO";
+        case EMC_TASK_MODE_MDI:
+            return "EMC_TASK_MODE_MDI";
+    }
+    return "EMS_TASK_MODE_UNKNOWN"; 
+}
+
+const char *emc_task_exec_symbol_lookup(EMC_TASK_EXEC_ENUM exec)
+{
+    switch(exec){
+        case EMC_TASK_EXEC_ERROR:
+            return "EMC_TASK_EXEC_ERROR";
+        case EMC_TASK_EXEC_DONE:
+            return "EMC_TASK_EXEC_DONE";
+        case EMC_TASK_EXEC_WAITING_FOR_MOTION:
+            return "EMC_TASK_EXEC_WAITING_FOR_MOTION";
+        case EMC_TASK_EXEC_WAITING_FOR_MOTION_QUEUE:
+            return "EMC_TASK_EXEC_WAITING_FOR_MOTION_QUEUE";
+        case EMC_TASK_EXEC_WAITING_FOR_IO:
+            return "EMC_TASK_EXEC_WAITING_FOR_IO";
+        case EMC_TASK_EXEC_WAITING_FOR_MOTION_AND_IO:
+            return "EMC_TASK_EXEC_WAITING_FOR_MOTION_AND_IO";
+        case EMC_TASK_EXEC_WAITING_FOR_DELAY:
+            return "EMC_TASK_EXEC_WAITING_FOR_DELAY";
+        case EMC_TASK_EXEC_WAITING_FOR_SYSTEM_CMD:
+            return "EMC_TASK_EXEC_WAITING_FOR_SYSTEM_CMD";
+        case EMC_TASK_EXEC_WAITING_FOR_SPINDLE_ORIENTED:
+            return "EMC_TASK_EXEC_WAITING_FOR_SPINDLE_ORIENTED";
+    }
+    return "EMC_TASK_EXEC_UNKNOWN";
+}
+#endif
 // NML Symbol Lookup Function
 const char *emc_symbol_lookup(long type)
 {

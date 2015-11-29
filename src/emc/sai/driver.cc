@@ -37,6 +37,12 @@
 #include <glob.h>
 #include <wordexp.h>
 
+#ifdef ENABLE_LOG_FILE
+#include <Log.h>
+#include <LogClass.h>
+LogClass logObject;
+#endif
+
 InterpBase *pinterp;
 #define interp_new (*pinterp)
 const char *prompt = "READ => ";
@@ -530,7 +536,7 @@ redirected and the user does not see them.
 */
 int _task = 0; // control preview behaviour when remapping
 
-int main (int argc, char ** argv)
+int main(int argc, char ** argv)
 {
   int status;
   int choice;
@@ -555,6 +561,10 @@ int main (int argc, char ** argv)
   strcpy(_parameter_file_name, default_name);
   _outfile = stdout; /* may be reset below */
   go_flag = 0;
+#ifdef ENABLE_LOG_FILE
+    std::string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/driverLog");
+    logObject.initializeLog(file);
+#endif
 
   while(1) {
       int c = getopt(argc, argv, "p:t:v:bsn:gi:l:T");

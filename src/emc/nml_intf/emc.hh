@@ -353,6 +353,13 @@ extern int emcFormat(NMLTYPE type, void *buffer, CMS * cms);
 extern const char *emc_symbol_lookup(long type);
 #define emcSymbolLookup(a) emc_symbol_lookup(a)
 
+#define PLDTECH_CHANGES
+#ifdef PLDTECH_CHANGES
+extern const char *emc_task_state_symbol_lookup(EMC_TASK_STATE_ENUM state);
+extern const char *emc_task_mode_symbol_lookup(EMC_TASK_MODE_ENUM mode);
+extern const char *emc_task_exec_symbol_lookup(EMC_TASK_EXEC_ENUM exec);
+#endif // PLDTECH_CHANGES
+
 // decls for command line args-- mains are responsible for setting these
 // so that other modules can get cmd line args for ad hoc processing
 extern int Argc;

@@ -472,6 +472,7 @@ void CMS_SERVER::add_local_port(CMS_SERVER_LOCAL_PORT * _local_port)
 	switch (_local_port->cms->remote_port_type) {
 
 	case CMS_TCP_REMOTE_PORT_TYPE:
+        rcs_print("CMS_SERVER::add_local_port called\n");
 	    remote_port = new CMS_SERVER_REMOTE_TCP_PORT(this);
 	    break;
 /*! \todo Another #if 0 */
@@ -803,6 +804,8 @@ void CMS_SERVER::run(int setup_CC_signal_local_port)
 {
     server_tid = current_tid = 0;
     current_pid = server_pid = getpid();
+    rcs_print("CMS_SERVER::run with setup_CC_signal_local_port (%d)\n", 
+            setup_CC_signal_local_port);
     if (!server_registered) {
 	register_server(setup_CC_signal_local_port);
     }

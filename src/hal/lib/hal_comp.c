@@ -64,14 +64,16 @@ int hal_xinit(const int type,
     }
 
     // RTAPI initialisation already done
-    HALDBG("initializing component '%s' type=%d arg1=%d arg2=%d/0x%x",
+    HALINFO("initializing component '%s' type=%d arg1=%d arg2=%d/0x%x\n",
 	   name, type, userarg1, userarg2, userarg2);
 
     if ((lib_module_id < 0) && (type != TYPE_HALLIB)) {
 	// if hal_lib not inited yet, do so now - recurse
 #ifdef RTAPI
+	HALINFO("initializing RTAPI part\n");
 	retval = hal_xinit(TYPE_HALLIB, 0, 0, NULL, NULL, "hal_lib");
 #else
+	HALINFO("initializing non-RTAPI part\n");
 	retval = hal_xinitf(TYPE_HALLIB, 0, 0, NULL, NULL, "hal_lib%ld",
 			    (long) getpid());
 #endif
@@ -211,6 +213,7 @@ int hal_xinit(const int type,
     // in ULAPI this will happen after the recursion on hal_lib%d unwinds
 
     if (type == TYPE_HALLIB) {
+	HALINFO("inside TYPE_HALLIB\n");
 #ifdef RTAPI
 	// only on RTAPI hal_lib initialization:
 	// export the instantiation support userfuncts
@@ -234,13 +237,13 @@ int hal_xinit(const int type,
 #endif
 	retval = hal_ready(lib_module_id);
 	if (retval)
-	    HALERR("hal_ready(%d) failed rc=%d", lib_module_id, retval);
+	    HALINFO("hal_ready(%d) failed rc=%d", lib_module_id, retval);
 	else
-	    HALDBG("%s initialization complete", hal_name);
+	    HALINFO("%s initialization complete", hal_name);
 	return retval;
     }
 
-    HALDBG("%s component '%s' id=%d initialized%s",
+    HALINFO("%s component '%s' id=%d initialized%s",
 	   (ctor != NULL) ? "instantiable" : "legacy",
 	   hal_name, comp_id,
 	   (dtor != NULL) ? ", has destructor" : "");
