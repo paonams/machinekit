@@ -202,7 +202,7 @@ int rtapi_app_main(void)
 {
     int retval;
     // rtapi_set_msg_level(RTAPI_MSG_DBG);
-    rtapi_print_msg(RTAPI_MSG_ERR, "MOTION: init_module() starting...\n");
+    rtapi_print_msg(RTAPI_MSG_ERR, "MOTION: rtapi_app_main init_module() starting...\n");
 
     /* set flag */
     first_pass = 1;
@@ -258,7 +258,7 @@ int rtapi_app_main(void)
 	return -1;
     }
 
-    rtapi_print_msg(RTAPI_MSG_ERR, "MOTION: init_module() complete\n");
+    rtapi_print_msg(RTAPI_MSG_ERR, "MOTION: rtapi_app_main init_module() complete\n");
 
     hal_ready(mot_comp_id);
 

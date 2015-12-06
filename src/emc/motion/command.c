@@ -426,8 +426,9 @@ check_stuff ( "before command_handler()" );
 /*	rtapi_print_msg(RTAPI_MSG_ERR, "%d: CMD %d, code %3d ", emcmotStatus->heartbeat,
 	    emcmotCommand->commandNum, emcmotCommand->command);
 */
-	rtapi_print_msg(RTAPI_MSG_ERR, "%d: CMD %d, code (%s) ", emcmotStatus->heartbeat,
-	    emcmotCommand->commandNum, cmdCodeToString(emcmotCommand->command));
+	rtapi_print_msg(RTAPI_MSG_ERR, "%s heartbeat %d: CMD %d, code (%s) ", 
+		__FUNCTION__, emcmotStatus->heartbeat,
+		emcmotCommand->commandNum, cmdCodeToString(emcmotCommand->command));
 	switch (emcmotCommand->command) {
 	case EMCMOT_ABORT:
 	    /* abort motion */

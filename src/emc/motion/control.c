@@ -343,6 +343,7 @@ check_stuff ( "after update_status()" );
     /* clear init flag */
     first_pass = 0;
 
+
 /* end of controller function */
 }
 

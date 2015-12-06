@@ -249,7 +249,7 @@ int hal_add_funct_to_thread(const char *funct_name,
     CHECK_STR(funct_name);
     CHECK_STR(thread_name);
 
-    HALDBG("adding function '%s' to thread '%s'", funct_name, thread_name);
+    HALINFO("adding function '%s' to thread '%s'", funct_name, thread_name);
     {
 	hal_thread_t *thread __attribute__((cleanup(halpr_autorelease_mutex)));
 
@@ -355,7 +355,7 @@ int hal_del_funct_from_thread(const char *funct_name, const char *thread_name)
     CHECK_STR(funct_name);
     CHECK_STR(thread_name);
 
-    HALDBG("removing function '%s' from thread '%s'", funct_name, thread_name);
+    HALINFO("removing function '%s' from thread '%s'", funct_name, thread_name);
     {
 	hal_thread_t *thread __attribute__((cleanup(halpr_autorelease_mutex)));
 
