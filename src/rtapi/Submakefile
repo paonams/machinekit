@@ -80,6 +80,7 @@ ifeq ($(BUILD_SYS),kbuild)
 ULAPI_SRCS += rtapi/$(threads)/rtapi_module.c
 endif
 
+CXXFLAGS += -I $(SOFTWARE_ROOT)/custom/lib -DENABLE_LOG_FILE
 # resolved at loadtime
 $(call TOOBJSDEPS, $(ULAPI_SRCS)): EXTRAFLAGS += \
 	$(THREADS_RTFLAGS) -fPIC
@@ -144,6 +145,8 @@ TARGETS += $(ULAPI_AUTOLOAD_LIB) $(ULAPI_AUTOLOAD_LIB).0
 # rtapi_app_<flavor> requires two sources plus one already in
 # ulapi.so.
 
+CXXFLAGS += -I $(SOFTWARE_ROOT)/custom/lib -DENABLE_LOG_FILE
+
 RTAPI_APP_SRCS := \
 	rtapi/$(threads)/rtapi_app.cc \
 	rtapi/$(threads)/rtapi_compat.c \
@@ -167,8 +170,9 @@ $(call TOOBJSDEPS, rtapi/$(threads)/rtapi_app.cc): EXTRAFLAGS = \
 	../lib/liblinuxcncshm.so \
 	../lib/libmtalk.so.0 \
 	../lib/liblinuxcnc-pb2++.so.0 \
-	../lib/librtapi_math.so.0
-	$(ECHO) Linking $(notdir $@)
+	../lib/librtapi_math.so.0 \
+	$(SOFTWARE_ROOT)/custom/lib/Log.so
+	$(ECHO) ../libexec/rtapi_app_ Linking $(notdir $@)
 	@mkdir -p $(dir $@)
 	$(Q)$(CXX) -Wl,--no-as-needed -Wl,-rpath,$(EMC2_RTLIB_DIR) $(RTAPI_APP_RPATH) \
 	    -o $@ $^ $(RT_LDFLAGS) \
@@ -251,7 +255,7 @@ $(call TOOBJSDEPS, $(RTAPI_KDETECT_SRCS)): \
 
 # Build target
 ../libexec/kdetect: $(RTAPI_KDETECT_OBJS)  ../lib/liblinuxcnchal.so
-	$(ECHO) Linking $(notdir $@)
+	$(ECHO) ../libexec/kdetect Linking $(notdir $@)
 	@mkdir -p $(dir $@)
 	$(Q)$(CC)  $(LDFLAGS) -o $@ $^ -lrt -ldl
 
@@ -285,7 +289,7 @@ $(call TOOBJSDEPS, $(RTAPI_MSGD_SRCS)): \
 	../lib/liblinuxcncini.so \
 	../lib/libmtalk.so.0 \
 	../lib/liblinuxcnc-pb2++.so
-	$(ECHO) Linking $(notdir $@)
+	$(ECHO) ../libexec/rtapi_msgd Linking $(notdir $@)
 	@mkdir -p $(dir $@)
 	$(Q)$(CC)  $(LDFLAGS) -o $@ $^ $(RTAPI_MSGD_LDFLAGS) -lrt
 
@@ -297,7 +301,7 @@ FLAVOR_SRCS =  rtapi/flavor.c rtapi/rtapi_compat.c
 
 ../libexec/flavor: $(call TOOBJS, $(FLAVOR_SRCS)) \
 		../lib/liblinuxcncshm.so ../lib/liblinuxcncini.so
-	$(ECHO) Linking $(notdir $@)
+	$(ECHO) ../libexec/flavor Linking $(notdir $@)
 	@mkdir -p $(dir $@)
 	$(Q)$(CC)  $(LDFLAGS) -o $@ $^ -lrt
 

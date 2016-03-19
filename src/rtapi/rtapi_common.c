@@ -80,6 +80,7 @@ static rtapi_switch_t rtapi_switch_struct = {
     .thread_flavor_name = THREAD_FLAVOR_NAME,
     .thread_flavor_id = THREAD_FLAVOR_ID,
     .thread_flavor_flags = FLAVOR_FLAGS,
+    .typeName = "rtapi_switch_struct",
 
     // init & exit functions
     .rtapi_init = &_rtapi_init,

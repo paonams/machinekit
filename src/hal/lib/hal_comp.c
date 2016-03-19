@@ -10,7 +10,7 @@
 #include <sys/types.h>		/* pid_t */
 #include <unistd.h>		/* getpid() */
 #endif
-
+#include <stdio.h>
 hal_comp_t *halpr_alloc_comp_struct(void);
 static void free_comp_struct(hal_comp_t * comp);
 
@@ -33,6 +33,7 @@ int hal_xinitf(const int type,
     CHECK_NULL(fmt);
     va_start(ap, fmt);
     int sz = rtapi_vsnprintf(hal_name, sizeof(hal_name), fmt, ap);
+    fprintf(stderr, "hal_xinitf called\n");
     if(sz == -1 || sz > HAL_NAME_LEN) {
         HALERR("invalid length %d for name starting with '%s'",
 	       sz, hal_name);
@@ -57,6 +58,7 @@ int hal_xinit(const int type,
     // respective rtapi.so/.ko module
     CHECK_NULL(rtapi_switch);
 
+    fprintf(stderr, "hal_xinit called\n");
     if ((dtor != NULL) && (ctor == NULL)) {
 	HALERR("component '%s': NULL constructor doesnt make"
 	       " sense with non-NULL destructor", name);
@@ -77,10 +79,14 @@ int hal_xinit(const int type,
 	retval = hal_xinitf(TYPE_HALLIB, 0, 0, NULL, NULL, "hal_lib%ld",
 			    (long) getpid());
 #endif
-	if (retval < 0)
+	if (retval < 0){
+            fprintf(stderr, "FAILED RETURNING\n" );
+	    HALINFO("FAILED returning\n");
 	    return retval;
+	}
     }
 
+    fprintf(stderr, "hal_xinit called   1 \n");
     // tag message origin field since ulapi autoload re-tagged them temporarily
     rtapi_set_logtag("hal_lib");
 
@@ -91,15 +97,21 @@ int hal_xinit(const int type,
     rtapi_snprintf(hal_name, sizeof(hal_name), "%s", name);
     rtapi_snprintf(rtapi_name, RTAPI_NAME_LEN, "HAL_%s", hal_name);
 
+    fprintf(stderr, "hal_xinit called   2 rtapi_name %s\n", rtapi_name);
     /* do RTAPI init */
+    fprintf(stderr, "hal_xinit called 22 typeName %s\n", rtapi_switch->typeName);
     comp_id = rtapi_init(rtapi_name);
+    //rtapi_switch->rtapi_init(modname)
     if (comp_id < 0) {
+        fprintf(stderr, "failed in rtapi_init\n");
 	HALERR("rtapi init(%s) failed", rtapi_name);
 	return -EINVAL;
     }
 
     // recursing? init HAL shm
     if ((lib_module_id < 0) && (type == TYPE_HALLIB)) {
+	HALINFO("initializing TYPE_HALLIB\n");
+        fprintf(stderr, "initializing TYPE_HALLIB\n");
 	// recursion case, we're initing hal_lib
 
 	// get HAL shared memory from RTAPI
@@ -157,6 +169,7 @@ int hal_xinit(const int type,
     HAL_ASSERT(hal_data != NULL);
     HAL_ASSERT(lib_module_id > -1);
     HAL_ASSERT(lib_mem_id > -1);
+    fprintf(stderr, "hal_xinit called   4 \n");
     if (lib_module_id < 0) {
 	HALERR("giving up");
 	return -EINVAL;

@@ -4663,6 +4663,7 @@ static int iniLoad(const char *filename)
   return 0;
 }
 
+#define XEMCLOG "/etc/mlabs/log/xemcLog"
 int main(int argc, char **argv)
 {
   int t;
@@ -4675,7 +4676,8 @@ int main(int argc, char **argv)
   Font posfont;
 
 #ifdef ENABLE_LOG_FILE
-    std::string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/xemcLog");
+    //std::string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/xemcLog");
+    std::string file(XEMCLOG);
     logObject.initializeLog(file);
 #endif
   // process command line args

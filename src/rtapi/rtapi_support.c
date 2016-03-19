@@ -217,6 +217,12 @@ void rtapi_print(const char *fmt, ...) {
 
     va_start(args, fmt);
     rtapi_msg_handler(RTAPI_MSG_ALL, fmt, args);
+#ifdef ENABLE_LOG_FILE
+    static char temp_buffer[400];
+    memset(temp_buffer, 400, 0);
+    retval = vsnprintf(temp_buffer, sizeof(temp_buffer), fmt, args);
+    LOG(temp_buffer);
+#endif
     va_end(args);
 }
 
@@ -227,6 +233,12 @@ void rtapi_print_msg(int level, const char *fmt, ...) {
 	(rtapi_get_msg_level() != RTAPI_MSG_NONE)) {
 	va_start(args, fmt);
 	rtapi_msg_handler(level, fmt, args);
+#ifdef ENABLE_LOG_FILE
+	static char temp_buffer[400];
+	memset(temp_buffer, 400, 0);
+	retval = vsnprintf(temp_buffer, sizeof(temp_buffer), fmt, args);
+	LOG(temp_buffer);
+#endif
 	va_end(args);
     }
 }

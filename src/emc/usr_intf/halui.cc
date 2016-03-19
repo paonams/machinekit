@@ -2141,11 +2141,12 @@ static void modify_hal_pins()
 }
 
 
-
+#define HALUILOG "/etc/mlabs/log/haluiLog"
 int main(int argc, char *argv[])
 {
 #ifdef ENABLE_LOG_FILE
-    string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/haluiLog");
+    //string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/haluiLog");
+    string file(HALUILOG);
     logObject.initializeLog(file);
 #endif
     // process command line args

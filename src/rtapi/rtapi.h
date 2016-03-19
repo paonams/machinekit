@@ -886,6 +886,7 @@ typedef struct {
     const char *thread_flavor_name; // for messsages
     int  thread_flavor_id;
     unsigned long thread_flavor_flags;
+    const char  *typeName;
 
     // init & exit functions
     rtapi_init_t rtapi_init;

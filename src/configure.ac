@@ -88,11 +88,11 @@ AS_IF([test "x$ac_cv_boost_python" = xyes],
 CPPFLAGS=$saved_CPPFLAGS
 LIBS=$saved_LIBS
 AC_LANG_POP([C++])
-AS_IF([test "x$ac_cv_boost_python" = xyes && test "x$BOOST_PYTHON_LIBS" != x],
-      [AC_DEFINE([HAVE_BOOST_PYTHON], [1],
-                 [define if the Boost::Python headers and library are available])],
-      [AC_MSG_ERROR([[boost::python is required to build $PACKAGE_NAME]])])
-AC_SUBST([BOOST_PYTHON_LIBS])
+#AS_IF([test "x$ac_cv_boost_python" = xyes && test "x$BOOST_PYTHON_LIBS" != x],
+#      [AC_DEFINE([HAVE_BOOST_PYTHON], [1],
+#                 [define if the Boost::Python headers and library are available])],
+#      [AC_MSG_ERROR([[boost::python is required to build $PACKAGE_NAME]])])
+#AC_SUBST([BOOST_PYTHON_LIBS])
 ])
 
 # Cython Python Bindings generator
@@ -2742,9 +2742,9 @@ AC_CHECK_LIB(Xinerama, XineramaQueryExtension,
 	    [],
 	    [HAVE_XINERAMA=no])
 
-if test "x$HAVE_XINERAMA" = "xno"; then
-    AC_MSG_ERROR([Xinerama library or headers not found])
-fi
+#if test "x$HAVE_XINERAMA" = "xno"; then
+#    AC_MSG_ERROR([Xinerama library or headers not found])
+#fi
 
 # check for Xaw, that is needed for emc2/src/emc/usr_intf/xemc.cc
 
@@ -2946,15 +2946,15 @@ if test "$BUILD_PYTHON" = "yes"; then
     PYTHON_TK_VERSION="`$PYTHON -c 'import _tkinter; print _tkinter.TK_VERSION'`"
     PYTHON_TCL_VERSION="`$PYTHON -c 'import _tkinter; print _tkinter.TCL_VERSION'`"
 
-    if test "$PYTHON_TCL_VERSION" != "$TCL_VERSION"; then
-	AC_MSG_RESULT([TCL mismatch: $TCL_VERSION vs $PYTHON_TCL_VERSION])
-	AC_MSG_ERROR([Python requires use of Tcl $PYTHON_TCL_VERSION and Tk $PYTHON_TK_VERSION.
-Install this version and specify --with-tcl and --with-tk if necessary])
-    fi
-    if test "$PYTHON_TK_VERSION" != "$TK_VERSION"; then
-	AC_MSG_RESULT([Tk mismatch: $TK_VERSION vs $PYTHON_TK_VERSION])
-	AC_MSG_ERROR(["Python requires use of Tk $TK_VERSION.  Install this version and specify --with-tk if necessary"])
-    fi
+#    if test "$PYTHON_TCL_VERSION" != "$TCL_VERSION"; then
+#	AC_MSG_RESULT([TCL mismatch: $TCL_VERSION vs $PYTHON_TCL_VERSION])
+#	AC_MSG_ERROR([Python requires use of Tcl $PYTHON_TCL_VERSION and Tk $PYTHON_TK_VERSION.
+#Install this version and specify --with-tcl and --with-tk if necessary])
+#    fi
+#    if test "$PYTHON_TK_VERSION" != "$TK_VERSION"; then
+#	AC_MSG_RESULT([Tk mismatch: $TK_VERSION vs $PYTHON_TK_VERSION])
+#	AC_MSG_ERROR(["Python requires use of Tk $TK_VERSION.  Install this version and specify --with-tk if necessary"])
+#    fi
     AC_MSG_RESULT([$PYTHON_TK_VERSION])
 
     AC_MSG_CHECKING(location of Python header files)
@@ -2991,24 +2991,24 @@ Install this version and specify --with-tcl and --with-tk if necessary])
     SITEPY=`$PYTHON -c 'import distutils.sysconfig; print distutils.sysconfig.get_python_lib(1)'`
     AC_MSG_RESULT($SITEPY)
 
-    AC_CHECK_HEADERS(GL/gl.h GL/glu.h,[],[AC_MSG_ERROR([Required OpenGL header missing.  Install it, or specify --disable-python to skip the parts of LinuxCNC that depend on Python])])
+#    AC_CHECK_HEADERS(GL/gl.h GL/glu.h,[],[AC_MSG_ERROR([Required OpenGL header missing.  Install it, or specify --disable-python to skip the parts of LinuxCNC that depend on Python])])
 
-    AC_CHECK_LIB(GL, glBegin, [], [AC_MSG_ERROR([Required GL library missing.  Install it, or specify --disable-python to skip the parts of LinuxCNC that depend on Python])])
+#    AC_CHECK_LIB(GL, glBegin, [], [AC_MSG_ERROR([Required GL library missing.  Install it, or specify --disable-python to skip the parts of LinuxCNC that depend on Python])])
 
-    AC_MSG_CHECKING(for working GLU quadrics)
+#    AC_MSG_CHECKING(for working GLU quadrics)
 
-    AC_TRY_COMPILE([
+#    AC_TRY_COMPILE([
 #include <GL/gl.h>
 #include <GL/glu.h>
 ],
-	[GLUquadric *q;],
-	[AC_MSG_RESULT(yes)],[
-		AC_MSG_ERROR([Required GLU library missing.  Install it or specify --disable-python to skip the parts of LinuxCNC that depend on Python])]
+#	[GLUquadric *q;],
+#	[AC_MSG_RESULT(yes)],[
+#		AC_MSG_ERROR([Required GLU library missing.  Install it or specify --disable-python to skip the parts of LinuxCNC that depend on Python])]
 
-    )
+#    )
 
-    AC_MSG_CHECKING(for Xmu headers)
-    AC_CHECK_HEADERS(X11/Xmu/Xmu.h,[],[AC_MSG_ERROR([Required Xmu header missing.  Install it, or specify --disable-python to skip the parts of LinuxCNC that depend on Python])])
+#    AC_MSG_CHECKING(for Xmu headers)
+#    AC_CHECK_HEADERS(X11/Xmu/Xmu.h,[],[AC_MSG_ERROR([Required Xmu header missing.  Install it, or specify --disable-python to skip the parts of LinuxCNC that depend on Python])])
 fi
 
 AC_SUBST([BUILD_PYTHON])

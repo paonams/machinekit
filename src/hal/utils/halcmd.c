@@ -160,7 +160,7 @@ int halcmd_startup(int quiet, char *uri, const char *svc_uuid) {
     /* check result */
     if (comp_id < 0) {
         if (!quiet) {
-            fprintf(stderr, "halcmd: hal_init() failed: %d\n", comp_id );
+            fprintf(stderr, "halcmd: halcmd_startup hal_init() failed: %d\n", comp_id );
             fprintf(stderr, "NOTE: 'rtapi' module must be loaded\n" );
         }
 	return -EINVAL;

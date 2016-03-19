@@ -21,7 +21,7 @@ $(call TOOBJSDEPS, $(MESSAGEBUS_SRCS)) : EXTRAFLAGS += $(MESSAGEBUS_CXX_CFLAGS)
 	../lib/liblinuxcnchal.so.0 \
 	../lib/liblinuxcnc-pb2++.so.0 \
 	../lib/liblinuxcnc-npb.so.0
-	$(ECHO) Linking $(notdir $@)
+	$(ECHO) Linking ../bin/messagebus $(notdir $@)
 	$(Q)$(CC) -o $@ $^  \
 	 $(MESSAGEBUS_CXX_LDFLAGS)
 
@@ -48,7 +48,7 @@ $(call TOOBJSDEPS, $(RFRAME_SRCS)) : EXTRAFLAGS += $(RFRAME_CXX_CFLAGS)
 	../lib/liblinuxcnchal.so.0 \
 	../lib/liblinuxcnc-pb2++.so.0 \
 	../lib/liblinuxcnc-npb.so.0
-	$(ECHO) Linking $(notdir $@)
+	$(ECHO) Linking ../bin/rframe $(notdir $@)
 	$(Q)$(CC) -o $@ $^  \
 	 $(RFRAME_CXX_LDFLAGS)
 

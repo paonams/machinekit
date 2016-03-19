@@ -186,6 +186,8 @@ int SHMEM::open()
 #endif
     /* set up the shared memory address and semaphore, in given state */
     if (master) {
+	rcs_print_error("SHMEM:open master memory size = %ld use_os_sem = %d\n", size, use_os_sem);
+
 	shm = new RCS_SHAREDMEM(key, size, RCS_SHAREDMEM_CREATE, (int) MODE);
 	if (shm->addr == NULL) {
 	    switch (shm->create_errno) {
@@ -242,6 +244,7 @@ int SHMEM::open()
 	}
 	in_buffer_id = 0;
     } else {
+	rcs_print_error("SHMEM:open non-master memory size = %ld use_os_sem = %d\n", size, use_os_sem);
 	shm = new RCS_SHAREDMEM(key, size, RCS_SHAREDMEM_NOCREATE);
 	if (NULL == shm) {
 	    rcs_print_error
@@ -450,9 +453,11 @@ int SHMEM::close()
     return 0;
 }
 
+
 /* Access the shared memory buffer. */
 CMS_STATUS SHMEM::main_access(void *_local)
 {
+    //rcs_print_error("SHMEM::main_access called\n");
 
     /* Check pointers. */
     if (shm == NULL) {

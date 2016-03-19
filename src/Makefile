@@ -84,7 +84,11 @@ endif
 ifeq ($(BASEPWD),)
 BASEPWD := $(shell pwd)
 export BASEPWD
+#ifeq ($(MODE), host)
 include Makefile.inc
+#else
+#include $(SOFTWARE_ROOT)/custom/make/Rules.make
+#endif
 ifeq ($(origin PYTHONPATH),undefined)
 PYTHONPATH:=$(EMC2_HOME)/lib/python
 else
@@ -92,7 +96,11 @@ PYTHONPATH:=$(EMC2_HOME)/lib/python:$(PYTHONPATH)
 endif
 export PYTHONPATH
 else
+#ifeq ($(MODE), host)
 include $(BASEPWD)/Makefile.inc
+#else
+#include $(SOFTWARE_ROOT)/custom/make/Rules.make
+#endif
 endif
 ifeq ($(BUILD_THREAD_FLAVORS),)
 $(error Makefile.inc must specify 'BUILD_THREAD_FLAVORS' and other variables)
@@ -224,15 +232,7 @@ SUBDIRS := \
 	hal/support \
 	hal/drivers/hal_pru_generic \
 	hal/simdrivers \
-	hal/cython \
 	\
-	emc/usr_intf/axis \
-	emc/usr_intf/touchy \
-	emc/usr_intf/stepconf \
-	emc/usr_intf/pncconf \
-	emc/usr_intf/gremlin \
-	emc/usr_intf/gscreen \
-	emc/usr_intf/gmoccapy \
 	emc/usr_intf \
 	emc/nml_intf \
 	emc/task \
@@ -250,7 +250,6 @@ SUBDIRS := \
 	module_helper \
 	\
 	po \
-
 
 # moved to src/rtapi/Submakefile
 # ULAPISRCS := rtapi/$(RTPREFIX)_ulapi.c
@@ -343,6 +342,9 @@ INCLUDE := $(patsubst %,-I%, $(INCLUDES))
 ifeq ($(BUILD_PYTHON),yes)
 INCLUDE += -I$(INCLUDEPY)
 endif
+#ifeq ($(MODE), target)
+#INCLUDE += -I/opt/arm/usr/include/
+#endif
 
 # trap build errors by making it possible to compare configure SHA vs build SHA
 # see configure.ac GIT_CONFIG_SHA for the configure-time string
@@ -1502,7 +1504,7 @@ RTDEPS := $(sort $(patsubst $(OBJDIR)/%.o,$(DEPDIR)/%.d, $(RTOBJS)))
 IS_POWERPC = test `uname -m` = ppc -o `uname -m` = ppc64
 modules: $(patsubst %.o,$(RTLIBDIR)/%.so,$(obj-m))
 $(RTLIBDIR)/%.so:
-	$(ECHO) Linking $@
+	$(ECHO) "RTLIBDIR " Linking $@
 	@mkdir -p $(dir $@)
 	$(Q)$(LD) -r -o $(OBJDIR)/$*.tmp \
 	    $^

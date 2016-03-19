@@ -283,7 +283,8 @@ flavor_ptr default_flavor(void)
     }
     return flavor_byid(RTAPI_POSIX_ID);
 }
-
+#undef EMC2_SYSTEM_CONFIG_DIR
+#define EMC2_SYSTEM_CONFIG_DIR "/etc/mlabs/build/machinekit/etc/linuxcnc"
 
 void check_rtapi_config_open()
 {

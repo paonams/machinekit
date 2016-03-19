@@ -24,18 +24,22 @@ int emcGetArgs(int argc, char *argv[])
 {
     int t;
     fprintf(stderr, "emcGetArgs argc (%d) argv (%s)\n", argc, argv[0]);
+    rcs_print("emcGetArgs called\n");
     /* process command line args, indexing argv[] from [1] */
     for (t = 1; t < argc; t++) {
         if (!strcmp(argv[t], "-ini")) {
             if (t == argc - 1) {
+                rcs_print("emcGetArgs returning -1\n");
                 return -1;
             } else {
                 if (strlen(argv[t+1]) >= LINELEN) {
                     fprintf(stderr, "ini file name too long (max %d):\n", LINELEN);
                     fprintf(stderr, "    %s\n", argv[t+1]);
+                    rcs_print("emcGetArgs ini file name too long returning -1\n");
                     return -1;
                 }
                 strcpy(emc_inifile, argv[t + 1]);
+                rcs_print("emcGetArgs called emc_inifile=%s\n", emc_inifile);
                 t++;
             }
             continue;
@@ -57,6 +61,7 @@ int emcGetArgs(int argc, char *argv[])
                     break;
                 }
             }
+            rcs_print("emcGetArgs queryhost\n");
             nmlSetHostAlias(qhost, "localhost");	/* If localhost
                                                        appears in .nml
                                                        file it will
@@ -71,8 +76,10 @@ int emcGetArgs(int argc, char *argv[])
         }
         if (!strcmp(argv[t], "-host")) {
             if (t == argc - 1) {
+                rcs_print("emcGetArgs returning from host -1\n");
                 return -1;
             } else {
+                rcs_print("emcGetArgs localhost\n");
                 nmlSetHostAlias(argv[t + 1], "localhost");	/* If
                                                                localhost
                                                                appears in 
@@ -93,5 +100,6 @@ int emcGetArgs(int argc, char *argv[])
     }
     /* else not recognized-- ignore */
 
+    rcs_print("emcGetArgs END\n");
     return 0;
 }

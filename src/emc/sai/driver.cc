@@ -36,7 +36,6 @@
 #include <readline/history.h>
 #include <glob.h>
 #include <wordexp.h>
-
 #ifdef ENABLE_LOG_FILE
 #include <Log.h>
 #include <LogClass.h>
@@ -536,6 +535,7 @@ redirected and the user does not see them.
 */
 int _task = 0; // control preview behaviour when remapping
 
+#define DRIVERLOG "/etc/mlabs/log/driverLog"
 int main(int argc, char ** argv)
 {
   int status;
@@ -562,7 +562,7 @@ int main(int argc, char ** argv)
   _outfile = stdout; /* may be reset below */
   go_flag = 0;
 #ifdef ENABLE_LOG_FILE
-    std::string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/driverLog");
+    std::string file(DRIVERLOG);
     logObject.initializeLog(file);
 #endif
 

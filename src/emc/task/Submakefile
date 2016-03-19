@@ -32,7 +32,11 @@ MILLTASKSRCS := \
 USERSRCS += $(MILLTASKSRCS)
 
 #LDFLAGS +=
-
+LIBFLAGS = 
+ifeq ($(MODE), target)
+#LIBFLAGS =  -L/home/sanjit/Documents/workArea/LINUXCNC/cross_compiler/buildroot-2015.11.1/output/host/usr/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib -lintl
+LIBFLAGS =  -L$(TARGET_LIBFLAGS) -lintl
+endif
 ../bin/milltask: $(call TOOBJS, $(MILLTASKSRCS)) \
 	../lib/librs274.so.0 \
 	../lib/liblinuxcnc.a \
@@ -44,5 +48,5 @@ USERSRCS += $(MILLTASKSRCS)
 	../lib/librtapi_math.so.0 \
 	$(SOFTWARE_ROOT)/custom/lib/Log.so
 	$(ECHO) Linking $(notdir $@)
-	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(BOOST_PYTHON_LIBS) -l$(LIBPYTHON)
+	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(BOOST_PYTHON_LIBS) -l$(LIBPYTHON) $(LIBFLAGS)
 TARGETS += ../bin/milltask

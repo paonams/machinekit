@@ -3210,7 +3210,7 @@ static int iniLoad(const char *filename)
 
     return 0;
 }
-
+#define TASKMAINLOG "/etc/mlabs/log/emctaskmainLog"
 /*
 syntax: a.out {-d -ini <inifile>} {-nml <nmlfile>} {-shm <key>}
  */
@@ -3222,7 +3222,8 @@ int main(int argc, char *argv[])
     double minTime, maxTime;
 
 #ifdef ENABLE_LOG_FILE
-    std::string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/emctaskmainLog");
+    //std::string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/emctaskmainLog");
+    std::string file(TASKMAINLOG);
     logObject.initializeLog(file);
 #endif
     // understand below settings : sanjit
@@ -3255,6 +3256,9 @@ int main(int argc, char *argv[])
 
     // set print destination to stdout, for console apps
     set_rcs_print_destination(RCS_PRINT_TO_STDOUT);
+    rcs_print("****************************************\n");
+    rcs_print("*               EMCTASK                  *\n");
+    rcs_print("****************************************\n");
     rcs_print("src/emc/task/emctaskmain.cc main called\n");
     // process command line args
     if (0 != emcGetArgs(argc, argv)) {
@@ -3332,6 +3336,7 @@ int main(int argc, char *argv[])
     minTime = DBL_MAX;		// set to value that can never be exceeded
     maxTime = 0.0;		// set to value that can never be underset
 
+    rcs_print("src/emc/task/emctaskmain.cc BEFORE WHILE LOOP \n");
     while (!done) {
         //rcs_print("########################## WHILE BEGIN =========================\n");
         check_ini_hal_items();
@@ -3499,6 +3504,7 @@ int main(int argc, char *argv[])
         // since emcStatus was passed to the WM init functions, it
         // will be updated in the _update() functions above. There's
         // no need to call the individual functions on all WM items.
+        //rcs_print("src/emc/task/emctaskmain.cc emcStatusBuffer->write \n");
         emcStatusBuffer->write(emcStatus);
 
         // wait on timer cycle, if specified, or calculate actual

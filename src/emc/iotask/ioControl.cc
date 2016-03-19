@@ -683,13 +683,14 @@ static void do_hal_exit(void) {
  * Called By:
  *
  ********************************************************************/
+#define IOCONTROLLOG "/etc/mlabs/log/ioControlLog"
 int main(int argc, char *argv[])
 {
     int t, tool_status;
     NMLTYPE type;
 
 #ifdef ENABLE_LOG_FILE
-    std::string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/ioControlLog");
+    std::string file(IOCONTROLLOG);
     logObject.initializeLog(file);
 #endif
     for (t = 1; t < argc; t++) {

@@ -63,6 +63,10 @@ KERNEL_VERS = $(shell uname -r)
 
 # FIXME:  need better way to find correct KERNELDIR
 KERNELDIR = /lib/modules/$(KERNEL_VERS)/build
+ifeq ($(MODE), target)
+#KERNELDIR = /home/sanjit/Documents/workArea/LINUXCNC/cross_compiler/modules/lib/modules/3.8.13.30/build
+KERNELDIR = $(TARGET_KERNELDIR)
+endif
 
 RUN_IN_PLACE=@RUN_IN_PLACE@
 
@@ -96,7 +100,7 @@ modules:
 	    -C $(KERNELDIR) \
 	    KBUILD_EXTRA_SYMBOLS="$(KBUILD_EXTRA_SYMBOLS)" \
 	    SUBDIRS=`pwd` \
-	    CC="$(CC)" KBUILD_VERBOSE=$(BUILD_VERBOSE) modules
+	    CC="$(CC)" LD="$(LD)" KBUILD_VERBOSE=$(BUILD_VERBOSE) modules
 
 clean:
 	rm *.ko *.mod.c *.o

@@ -9,6 +9,7 @@ USERSRCS += $(sort $(HALCMDSRCS) $(HALSHSRCS) $(HALCMDCCSRCS))
 
 $(call TOOBJSDEPS, $(HALSHSRCS)) : EXTRAFLAGS = -fPIC
 $(call TOOBJSDEPS, hal/utils/halsh.c) : EXTRAFLAGS += $(TCL_CFLAGS)
+ifneq ($(MODE), target)
 ../tcl/hal.so: $(call TOOBJS, $(HALSHSRCS)) \
 	../lib/liblinuxcncini.so.0 \
 	../lib/liblinuxcnchal.so.0 \
@@ -18,6 +19,7 @@ $(call TOOBJSDEPS, hal/utils/halsh.c) : EXTRAFLAGS += $(TCL_CFLAGS)
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CC) $(LDFLAGS) -shared $^  $(TCL_LIBS) -o $@
 TARGETS += ../tcl/hal.so
+endif
 
 $(call TOOBJSDEPS, $(HALCMDCCSRCS)) : EXTRAFLAGS =  \
 	$(PROTOBUF_CFLAGS) $(CZMQ_CFLAGS) -fPIC

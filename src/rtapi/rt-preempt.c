@@ -35,6 +35,9 @@
 #include <unistd.h>		// getpid(), syscall()
 #include <time.h>               // clock_nanosleep()
 #include <sys/resource.h>	// rusage, getrusage(), RUSAGE_SELF
+#ifdef __UCLIBC__
+#define RUSAGE_THREAD 1
+#endif
 
 #ifdef RTAPI
 #include <stdlib.h>		// malloc(), sizeof(), free()
@@ -89,9 +92,7 @@ int _rtapi_exit(int module_id) {
     return 0;
 }
 
-
 #ifdef RTAPI
-
 static inline int task_id(task_data *task) {
     return (int)(task - task_array);
 }

@@ -1257,7 +1257,7 @@ static void initMain()
     programStartLine = 0;
 }
 
-
+#define SCHEDRMTLOG "/etc/mlabs/log/schedrmtLog"
 int main(int argc, char *argv[])
 {
     int opt;
@@ -1278,7 +1278,8 @@ int main(int argc, char *argv[])
     }
 
 #ifdef ENABLE_LOG_FILE
-    string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/schedrmtLog");
+    //string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/schedrmtLog");
+    string file(SCHEDRMTLOG);
     logObject.initializeLog(file);
 #endif
     // process emc command line args

@@ -58,6 +58,7 @@ PHYSMEM_HANDLE::PHYSMEM_HANDLE(unsigned long _physical_address,
 	return;
     }
     local_address = (LOCAL_ADDRESS_TYPE) physical_address;
+    rcs_print_error("PHYSMEM_HANDLE::PHYSMEM_HANDLE size (%ld) physical_address (%ld)\n", size, physical_address);
 }
 
 /* Destructor. */
@@ -72,6 +73,7 @@ void
     local_address = (LOCAL_ADDRESS_TYPE) _ptr;
     size = _size;
     offset = 0;
+    //rcs_print_error("PHYSMEM_HANDLE::set_to_ptr size (%ld)\n", size);
 }
 
 static int physmem_read_local_address_is_null_error_print_count = 0;

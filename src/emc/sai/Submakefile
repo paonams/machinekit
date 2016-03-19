@@ -14,6 +14,13 @@ SAISRCS := $(addprefix emc/sai/, saicanon.cc driver.cc dummyemcstat.cc) \
 endif
 USERSRCS += $(SAISRCS)
 LIBREADLINE=-lreadline
+LIBFLAGS =
+ifeq ($(MODE), target)
+#LIBFLAGS =  -L/home/sanjit/Documents/workArea/LINUXCNC/cross_compiler/buildroot-2015.11.1/output/host/usr/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib -lintl
+LIBFLAGS =  -L$(TARGET_LIBFLAGS) -lintl
+endif
+
+CXXFLAGS += -I $(SOFTWARE_ROOT)/custom/lib -DENABLE_LOG_FILE
 
 ../bin/rs274: $(call TOOBJS, $(SAISRCS)) \
 	../lib/librs274.so.0 \
@@ -26,4 +33,4 @@ LIBREADLINE=-lreadline
 	$(SOFTWARE_ROOT)/custom/lib/Log.so
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CXX) $(LDFLAGS) $(PROFILE_LDFLAGS) \
-	-o $@ $^ $(ULFLAGS) $(BOOST_PYTHON_LIBS) -l$(LIBPYTHON) $(LIBREADLINE)
+	-o $@ $^ $(ULFLAGS) $(BOOST_PYTHON_LIBS) -l$(LIBPYTHON) $(LIBREADLINE) $(LIBFLAGS)

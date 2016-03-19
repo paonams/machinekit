@@ -786,7 +786,9 @@ int main(int argc, char **argv)
 
     if (trap_signals && (getenv("NOSIGHDLR") != NULL))
 	trap_signals = false;
-
+#if 0
+    // allowing to run the software as root
+    // remove it once setuid is fix TODO SANJIT
     // sanity
     if (getuid() == 0) {
 	fprintf(stderr, "%s: FATAL - will not run as root\n", progname);
@@ -796,7 +798,7 @@ int main(int argc, char **argv)
 	fprintf(stderr, "%s: FATAL - will not run as setuid root\n", progname);
 	exit(EXIT_FAILURE);
     }
-
+#endif
     if (flavor == NULL)
 	flavor = default_flavor();
 
@@ -837,6 +839,7 @@ int main(int argc, char **argv)
     if (((flavor->flags & FLAVOR_KERNEL_BUILD) ||
 	 use_shmdrv) &&
 	!shmdrv_available()) {
+	fprintf(stderr, "loading of shmdrv\n");
 
 	if (shmdrv_opts == NULL)
 	    shmdrv_opts = getenv("SHMDRV_OPTS");
@@ -879,7 +882,7 @@ int main(int argc, char **argv)
 
     snprintf(proctitle, sizeof(proctitle), "msgd:%d",rtapi_instance);
     backtrace_init(proctitle);
-
+    fprintf(stderr, "opening log proctitle %s\n", proctitle);
     openlog_async(proctitle, option , SYSLOG_FACILITY);
     // max out async syslog buffers for slow system in debug mode
     tunelog_async(99,1000);

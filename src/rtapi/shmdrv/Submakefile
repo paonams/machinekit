@@ -29,16 +29,38 @@ ifeq ($(BUILD_ALL_FLAVORS)+$(USE_SHMDRV),yes+yes)
 SHMDRV_SRCS = rtapi/shmdrv/shmdrv.c \
 	rtapi/shmdrv/shmdrv.h \
 	rtapi/shmdrv/Makefile
+#objects/.shmdrv-built: $(SHMDRV_SRCS)
+#	for kdir in $(SHMDRV_KERNEL_DIRS); do \
+#	    kver=`../scripts/kernel-vers.sh $$kdir`; \
+#	    echo "kver $kdir"\
+#	    mkdir -p objects/userland/$$kver; \
+#	    cp $(SHMDRV_SRCS) objects/userland/$$kver; \
+#	    echo "Building userland shmdrv module for kernel version $$kver"; \
+#	    $(MAKE) \
+#		-C $$kdir \
+#		M=$(BASEPWD)/objects/userland/$$kver \
+#		CC=$(CC) KBUILD_VERBOSE=$(BUILD_VERBOSE) ARCH=$(ARCH_TYPE); \
+#	    mkdir -p ../rtlib/userland/$$kver; \
+#	    cp objects/userland/$$kver/Module.symvers \
+#		objects/userland/$$kver/shmdrv.ko \
+#		../rtlib/userland/$$kver; \
+#	done
+#	touch $@
+#LD=
+#ifeq ($(MODE), target)
+#LD=/home/sanjit/Documents/workArea/LINUXCNC/cross_compiler/buildroot-2015.11.1/output/host/usr/bin/arm-buildroot-linux-uclibcgnueabi-ld
+#endif
 objects/.shmdrv-built: $(SHMDRV_SRCS)
 	for kdir in $(SHMDRV_KERNEL_DIRS); do \
 	    kver=`../scripts/kernel-vers.sh $$kdir`; \
+	    echo "kver $kdir"\
 	    mkdir -p objects/userland/$$kver; \
 	    cp $(SHMDRV_SRCS) objects/userland/$$kver; \
 	    echo "Building userland shmdrv module for kernel version $$kver"; \
 	    $(MAKE) \
 		-C $$kdir \
 		M=$(BASEPWD)/objects/userland/$$kver \
-		CC=$(CC) KBUILD_VERBOSE=$(BUILD_VERBOSE); \
+		CC=$(CC) KBUILD_VERBOSE=$(BUILD_VERBOSE) ARCH=$(ARCH_TYPE) LD=$(LD); \
 	    mkdir -p ../rtlib/userland/$$kver; \
 	    cp objects/userland/$$kver/Module.symvers \
 		objects/userland/$$kver/shmdrv.ko \
@@ -79,7 +101,7 @@ $(call TOOBJSDEPS, $(MUTEXWATCH_SRCS)): \
 	EXTRAFLAGS +=  $(THREADS_RTFLAGS)
 
 ../bin/mutexwatch: ../lib/liblinuxcncshm.so $(call TOOBJS, $(MUTEXWATCH_SRCS))
-	$(ECHO) Linking $(notdir $@)
+	$(ECHO) Linking ../bin/mutexwatch $(notdir $@)
 	$(Q)$(CC)  $(LDFLAGS) -o $@ $^  ../lib/liblinuxcncshm.so -lrt
 
 USERSRCS += $(MUTEXWATCH_SRCS)

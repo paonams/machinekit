@@ -955,10 +955,14 @@ int nmlUpdate(const char *inifile)
 	case TRY:
 		// We have no connection at this moment
 		fprintf(stderr, "Try to establish NML connection\n");
-		if (emcTaskNmlGet() != 0)
-			break;
-		if (emcErrorNmlGet() != 0)
-			break;
+		if (emcTaskNmlGet() != 0){
+		    rcs_print("nmlUpdate emcTaskNmlGet failed\n");
+		    break;
+		}
+		if (emcErrorNmlGet() != 0){
+		    rcs_print("nmlUpdate emcErrorNmlGet failed\n");
+		    break;
+		}
 		fprintf(stderr, "NML connected\n");
 		status = CONNECTED;
 

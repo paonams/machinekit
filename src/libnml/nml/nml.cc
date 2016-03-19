@@ -1331,6 +1331,7 @@ NMLTYPE NML::peek()
 	    return (((NMLmsg *) cms->subdiv_data)->type);
 
 	default:
+	    rcs_print_error("NML::peek: fast_mode default cms->status\n");
 	    set_error();
 	    return -1;
 	}
@@ -1377,6 +1378,7 @@ NMLTYPE NML::peek()
 	return (((NMLmsg *) cms->subdiv_data)->type);
 
     default:
+	rcs_print_error("NML::peek: non-fast_mode default cms->status\n");
 	set_error();
 	return -1;
     }
@@ -1588,6 +1590,7 @@ int NML::write(NMLmsg * nml_msg)
 	if (*cms_status == CMS_WRITE_OK) {
 	    return (0);
 	}
+	rcs_print_error("NML::write: fastmode error.\n");
 	set_error();
 	return (-1);
     }
@@ -1642,6 +1645,7 @@ int NML::write(NMLmsg * nml_msg)
 	return (0);
     }
 
+    rcs_print_error("NML::write: non-fastmode error.\n");
     return set_error();
 }
 
@@ -1658,6 +1662,7 @@ int NML::write(NMLmsg * nml_msg)
 *************************************************************/
 int NML::set_error()
 {
+    rcs_print_error("NML::set_error \n");
     if (error_type != NML_NO_ERROR) {
 	return -1;
     }

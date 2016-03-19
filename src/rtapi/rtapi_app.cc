@@ -71,6 +71,12 @@
 #include <machinetalk/generated/message.pb.h>
 #include <pbutil.hh>  // note_printf(pb::Container &c, const char *fmt, ...)
 
+#ifdef ENABLE_LOG_FILE
+#include <Log.h>
+#include <LogClass.h>
+LogClass logObject;
+#endif
+
 using namespace google::protobuf;
 
 #include "rtapi.h"
@@ -537,6 +543,10 @@ static int do_load_cmd(int instance,
 	} else {
 	    strncpy(module_name, (name + flavor->mod_ext).c_str(),
 		    PATH_MAX);
+	    rtapi_print_msg(RTAPI_MSG_ERR, "%s: dlopen of module_name (%s)\n",
+		    __FUNCTION__, module_name);
+	    std::cout<<"do_load_cmd module_name "<<module_name<<" instance "
+		<<instance<<"\n";
 	    module = modules[name] = dlopen(module_name, RTLD_GLOBAL |RTLD_NOW);
 	    if (!module) {
 		string errmsg(dlerror());
@@ -547,6 +557,16 @@ static int do_load_cmd(int instance,
 		note_printf(pbreply, "%s: dlopen: %s",
 			    __FUNCTION__, errmsg.c_str());
 		note_printf(pbreply, "rpath=%s",	rpath == NULL ? "" : rpath);
+		rtapi_print_msg(RTAPI_MSG_ERR, "%s: dlopen failed for module_name (%s) with error (%s)\n",
+			__FUNCTION__, module_name, errmsg.c_str());
+		if(rpath != NULL){
+		    std::cout<<"do_load_cmd failed for module_name "<<module_name<<" error "
+			<<errmsg<<" rpath "<<rpath<<"\n";
+		}
+		else{
+		    std::cout<<"do_load_cmd failed for module_name "<<module_name<<" error "
+			<<errmsg<<" rpath NULL"<<"\n";
+		}
 		if (rpath)
 		    free((void *)rpath);
 		return -1;
@@ -1159,7 +1179,7 @@ static int mainloop(size_t  argc, char **argv)
 	global_data->rtapi_app_pid = 0;
 	exit(EXIT_FAILURE);
     }
-
+#if 0 // remove this once no-root is fixed SANJIT
     // make sure we're setuid root when we need to
     if (use_drivers || (flavor->flags & FLAVOR_DOES_IO)) {
 	if (geteuid() != 0) {
@@ -1171,7 +1191,7 @@ static int mainloop(size_t  argc, char **argv)
 	    exit(EXIT_FAILURE);
 	}
     }
-
+#endif
     // assorted RT incantations - memory locking, prefaulting etc
     if ((retval = harden_rt())) {
 	rtapi_print_msg(RTAPI_MSG_ERR,
@@ -1527,12 +1547,19 @@ static struct option long_options[] = {
     {0, 0, 0, 0}
 };
 
+#define RTAPI_APPLOG "/etc/mlabs/log/rtapi_appLog"
 int main(int argc, char **argv)
 {
     int c;
     progname = argv[0];
     inifile =  getenv("MACHINEKIT_INI");
 
+#ifdef ENABLE_LOG_FILE
+    std::string file(RTAPI_APPLOG);
+    logObject.initializeLog(file);
+#endif
+    rtapi_print_msg(RTAPI_MSG_ERR, "%s: src/rtapi/rtapi_app.cc called\n",
+	    __FUNCTION__);
     uuid_generate_time(process_uuid);
     uuid_unparse(process_uuid, process_uuid_str);
 
@@ -1646,10 +1673,12 @@ int main(int argc, char **argv)
 #endif
 
     // the actual checking for setuid happens in harden_rt() (if needed)
-    if (getuid() != 0) {
+//    if (getuid() != 0) {
+    if (1){
 	pid_t pid1;
 	pid_t pid2;
 	int status;
+    std::cout<<"src/rtapi/rtapi_app.cc running as non-root\n";
 	if ((pid1 = fork())) {
 	    waitpid(pid1, &status, 0);
 	    exit(status);
@@ -1665,6 +1694,7 @@ int main(int argc, char **argv)
 	    exit(1);
 	}
     } else {
+    std::cout<<"src/rtapi/rtapi_app.cc running as root\n";
 	// dont run as root XXX
     }
     exit(mainloop(argc, argv));

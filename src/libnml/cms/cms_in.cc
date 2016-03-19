@@ -55,6 +55,7 @@ int cms_print_queue_full_messages = 1;
 CMS_STATUS CMS::internal_access(void *_global, long _global_size,
     void *_local)
 {
+    //rcs_print_error("CMS::internal_access  void *_global _global_size %ld\n", _global_size);
     /* Don't bother trying to create a physmem handle for a NULL pointer. */
     if (NULL == _global) {
 	return (status = CMS_INTERNAL_ACCESS_ERROR);
@@ -80,6 +81,7 @@ CMS_STATUS CMS::internal_access(void *_global, long _global_size,
     function. */
 CMS_STATUS CMS::internal_access(PHYSMEM_HANDLE * _global, void *_local)
 {
+    //rcs_print_error("CMS::internal_access  PHYSMEM_HANDLE * _global\n");
     status = CMS_STATUS_NOT_SET;
     if (NULL == _global) {
 	rcs_print_error("CMS: Handle to global memory is NULL.\n");

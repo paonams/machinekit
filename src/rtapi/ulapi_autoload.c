@@ -62,7 +62,7 @@ static ulapi_main_t ulapi_main_ref;
 static ulapi_exit_t ulapi_exit_ref;
 
 // use 'ULAPI_DEBUG=<level> <hal binary/Python>' to trace ulapi loading
-static int ulapi_debug = RTAPI_MSG_NONE;
+static int ulapi_debug = RTAPI_MSG_DBG;
 
 static int ulapi_load(rtapi_switch_t **ulapi_switch);
 
@@ -82,7 +82,7 @@ int _ulapi_init(const char *modname) {
     if (ulapi_load(&rtapi_switch) < 0) {
 	return -ENOSYS;
     }
-    rtapi_print_msg(RTAPI_MSG_DBG,
+    rtapi_print_msg(RTAPI_MSG_INFO,
 		    "_ulapi_init(): ulapi %s %s loaded\n",
 		    flavor->name, rtapi_switch->git_version);
 
@@ -99,6 +99,7 @@ static rtapi_switch_t dummy_ulapi_switch_struct = {
     .git_version = GIT_VERSION,
     .thread_flavor_name = RTAPI_NOTLOADED_NAME,
     .thread_flavor_id = RTAPI_NOTLOADED_ID,
+    .typeName = "dummy_ulapi_switch_struct",
 
     // the only "working" method is _ulapi_init()
     // which will detect and load the proper ulapi
@@ -156,6 +157,7 @@ static int ulapi_load(rtapi_switch_t **ulapi_switch)
     int size = 0;
     int globalkey;
 
+    fprintf(stderr, "ulapi_load 1\n");
     // set the rtapi_instance global for this hal library instance
     if (instance != NULL)
 	rtapi_instance = atoi(instance);
@@ -186,12 +188,14 @@ static int ulapi_load(rtapi_switch_t **ulapi_switch)
     retval = shm_common_new(globalkey, &size,
 			    rtapi_instance, (void **) &global_data, 0);
 
+    fprintf(stderr, "ulapi_load 2\n");
     if (retval == -ENOENT) {
 	// the global_data segment does not exist. Happens if the realtime
 	// script was not started
 	rtapi_print_msg(RTAPI_MSG_ERR,
 			"ULAPI:%d ERROR: realtime not started\n",
 			rtapi_instance);
+        fprintf(stderr, "ulapi_load FAILED 3\n");
 	return retval;
     }
 
@@ -200,6 +204,7 @@ static int ulapi_load(rtapi_switch_t **ulapi_switch)
 	rtapi_print_msg(RTAPI_MSG_ERR,
 			"ULAPI:%d ERROR: shm_common_new() failed key=0x%x %s\n",
 			rtapi_instance, globalkey, strerror(-retval));
+        fprintf(stderr, "ulapi_load FAILED 4\n");
 	return retval;
     }
 
@@ -208,6 +213,7 @@ static int ulapi_load(rtapi_switch_t **ulapi_switch)
 			"ULAPI:%d ERROR: global segment size mismatch,"
 			" expected: %zd, actual:%d\n",
 		 rtapi_instance, sizeof(global_data_t), size);
+        fprintf(stderr, "ulapi_load FAILED 5\n");
 	return -EINVAL;
     }
 
@@ -217,6 +223,7 @@ static int ulapi_load(rtapi_switch_t **ulapi_switch)
 			" expected: 0x%x, actual: 0x%x\n",
 			rtapi_instance, GLOBAL_READY,
 			global_data->magic);
+        fprintf(stderr, "ulapi_load FAILED 6\n");
 	return -EINVAL;
     }
 
@@ -228,9 +235,11 @@ static int ulapi_load(rtapi_switch_t **ulapi_switch)
 	rtapi_print_msg(RTAPI_MSG_ERR,
 			"HAL_LIB:%d BUG - invalid flavor id: %d\n",
 			rtapi_instance, global_data->rtapi_thread_flavor);
+        fprintf(stderr, "ulapi_load FAILED 7\n");
 	return -EINVAL;
     }
-
+#undef EMC2_RTLIB_DIR
+#define EMC2_RTLIB_DIR "/etc/mlabs/build/machinekit/rtlib"
     snprintf(ulapi_lib_fname,PATH_MAX,"%s/%s-%s%s",
 	     EMC2_RTLIB_DIR, ulapi_lib, flavor->name, flavor->so_ext);
 
@@ -241,6 +250,7 @@ static int ulapi_load(rtapi_switch_t **ulapi_switch)
 			"HAL_LIB:%d FATAL - dlopen(%s) failed: %s\n",
 			rtapi_instance, ulapi_lib_fname,
 			errmsg ? errmsg : "NULL");
+        fprintf(stderr, "ulapi_load FAILED 8\n");
 	return -ENOENT;
     }
 
@@ -253,6 +263,7 @@ static int ulapi_load(rtapi_switch_t **ulapi_switch)
 			"HAL_LIB:%d FATAL - resolving %s: cant"
 			" dlsym(rtapi_get_handle): %s\n",
 			rtapi_instance, ulapi_lib, errmsg ? errmsg : "NULL");
+        fprintf(stderr, "ulapi_load FAILED 9\n");
 	return -ENOENT;
     }
 
@@ -273,6 +284,7 @@ static int ulapi_load(rtapi_switch_t **ulapi_switch)
 			"HAL_LIB:%d FATAL - resolving %s: "
 			"cant dlsym(ulapi_main): %s\n",
 			rtapi_instance, ulapi_lib, errmsg ? errmsg : "NULL");
+        fprintf(stderr, "ulapi_load FAILED 10\n");
 	return -ENOENT;
     }
     // resolve exit function
@@ -284,6 +296,7 @@ static int ulapi_load(rtapi_switch_t **ulapi_switch)
 			"HAL_LIB: FATAL - resolving %s:"
 			" cant dlsym(ulapi_exit): %s\n",
 		ulapi_lib, errmsg ? errmsg : "NULL");
+        fprintf(stderr, "ulapi_load FAILED 11\n");
 	return -ENOENT;
     }
 
@@ -298,6 +311,7 @@ static int ulapi_load(rtapi_switch_t **ulapi_switch)
 		"HAL_LIB: FATAL - cannot attach to instance %d"
 			" - realtime not started?\n",
 		rtapi_instance);
+        fprintf(stderr, "ulapi_load FAILED 12\n");
 	return -ENOENT;
     }
 

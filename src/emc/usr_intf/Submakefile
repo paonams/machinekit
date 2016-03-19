@@ -1,5 +1,8 @@
+EMCSHSRCS :=
+ifneq ($(MODE), target)
 EMCSHSRCS := emc/usr_intf/emcsh.cc \
              emc/usr_intf/shcom.cc
+endif
 EMCRSHSRCS := emc/usr_intf/emcrsh.cc \
               emc/usr_intf/shcom.cc
 EMCSCHEDSRCS := emc/usr_intf/schedrmt.cc \
@@ -47,6 +50,7 @@ else
 $(call TOOBJSDEPS, $(EMCWEBSRCS)) : EXTRAFLAGS = -D__DIR__=\"/var/cache/linuxcnc\"  -fPIC
 endif
 CFLAGS +=pthread
+ifneq ($(MODE), target)
 ../tcl/linuxcnc.so: $(call TOOBJS, $(EMCSHSRCS)) \
 	../lib/liblinuxcnc.a \
 	../lib/liblinuxcncini.so.0 \
@@ -54,7 +58,7 @@ CFLAGS +=pthread
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CXX) -shared $(LDFLAGS) -o $@ $(TCL_CFLAGS) $^ $(TCL_LIBS) -lXinerama
 TARGETS += ../tcl/linuxcnc.so
-
+endif
 ../bin/linuxcncrsh: $(call TOOBJS, $(EMCRSHSRCS)) \
 	../lib/liblinuxcnc.a \
 	../lib/libnml.so.0 \
@@ -121,7 +125,13 @@ $(call TOOBJSDEPS,$(XEMCSRCS)): EXTRAFLAGS = $(CFLAGS_X)
 	$(Q)$(CXX) $(LDFLAGS) -o $@ $^ $(XLIBS)
 TARGETS += ../bin/xlinuxcnc
 endif
-
+#ifeq ($(MODE), target)
+#BOOST_SERIALIZATION_LIB =-lboost_serialization
+#else
+#BOOST_SERIALIZATION_LIB =-lboost_serialization-mt
+#endif
+#BOOST_THREAD_LIB = -lboost_thread
+#BOOST_SYSTEM_LIB = 
 ifeq "$(BUILD_EMCWEB)" "yes"
 ../bin/emcweb: $(call TOOBJS, $(EMCWEBSRCS)) \
 	../lib/liblinuxcnc.a \

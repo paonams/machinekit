@@ -432,6 +432,7 @@ int set_rcs_print_file(char *_file_name)
     return 0;
 }
 
+
 int rcs_print(const char *_fmt, ...)
 {
     static char temp_buffer[400];
@@ -579,6 +580,7 @@ int rcs_print_error(const char *_fmt, ...)
     if ((rcs_print_mode_flags & PRINT_RCS_ERRORS)
 	&& ((max_rcs_errors_to_print >= rcs_errors_printed)
 	    || max_rcs_errors_to_print < 0)) {
+	rcs_print(_fmt);
 	retval = rcs_vprint(_fmt, args, 1);
 	if (max_rcs_errors_to_print == rcs_errors_printed &&
 	    max_rcs_errors_to_print >= 0) {

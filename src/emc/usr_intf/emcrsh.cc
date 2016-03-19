@@ -2812,6 +2812,7 @@ static void usage(char* pname) {
           );
 }
 
+#define EMCRSHLOG "/etc/mlabs/log/emcrshLog"
 int main(int argc, char *argv[])
 {
     int opt;
@@ -2831,7 +2832,8 @@ int main(int argc, char *argv[])
     }
 
 #ifdef ENABLE_LOG_FILE
-    string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/emcrshLog");
+    //string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/emcrshLog");
+    string file(EMCRSHLOG);
     logObject.initializeLog(file);
 #endif
     // process emc command line args

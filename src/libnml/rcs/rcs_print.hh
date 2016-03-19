@@ -63,7 +63,8 @@ extern "C" {
 #else
     extern int set_print_rcs_error_info(const char *file, int line);
     extern int print_rcs_error_new(const char *_fmt, ...) __attribute__((format(printf,1,2)));
-#define rcs_print_error set_print_rcs_error_info( __FILE__, __LINE__); print_rcs_error_new
+//#define rcs_print_error set_print_rcs_error_info( __FILE__, __LINE__); print_rcs_error_new
+#define rcs_print_error print_rcs_error_new
 #endif
 
     extern void set_rcs_print_flag(long flags_to_set);

@@ -3521,7 +3521,7 @@ int main(int argc, char **argv)
 			inifile = fopen(filename, "r");
 			if (inifile == NULL) {
 			    fprintf(stderr,
-				"Could not open ini file '%s'\n",
+				"in hal/utils/halrmt.c Could not open ini file '%s'\n",
 				filename);
 			    exit(-1);
 			}
@@ -3558,7 +3558,7 @@ int main(int argc, char **argv)
     hal_flag = 0;
     /* check result */
     if (comp_id < 0) {
-	fprintf(stderr, "halrmt: hal_init() failed: %d\n", comp_id );
+	fprintf(stderr, "halrmt: halrmt.c hal_init() failed: %d\n", comp_id );
 	fprintf(stderr, "NOTE: 'rtapi' kernel module must be loaded\n" );
 	return 1;
     }

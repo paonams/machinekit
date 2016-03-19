@@ -82,20 +82,25 @@ static RCS_STAT_CHANNEL *emcStatusChannel = NULL;
 static NML *emcErrorChannel = NULL;
 static RCS_CMD_CHANNEL *toolCommandChannel = NULL;
 static RCS_STAT_CHANNEL *toolStatusChannel = NULL;
-
+#define EMCSVRLOG "/etc/mlabs/log/emcsvrLog"
 int main(int argc, char *argv[])
 {
     double start_time;
 
 #ifdef ENABLE_LOG_FILE
-    std::string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/emcsvrLog");
+    //std::string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/emcsvrLog");
+    std::string file(EMCSVRLOG);
     logObject.initializeLog(file);
 #endif
     // process command line args
     if (0 != emcGetArgs(argc, argv)) {
+        rcs_print("src/emc/task/emcsvr.cc main exit\n");
         rcs_print_error("Error in argument list\n");
         exit(1);
     }
+    rcs_print("************************************\n");
+    rcs_print("*           EMCSERVER              *\n");
+    rcs_print("************************************\n");
     rcs_print("src/emc/task/emcsvr.cc main called\n");
     // get configuration information
     iniLoad(emc_inifile);

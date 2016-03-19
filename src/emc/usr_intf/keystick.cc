@@ -1615,6 +1615,7 @@ int tryNml()
 #undef RETRY_INTERVAL
 }
 
+#define KEYSTICKLOG "/etc/mlabs/log/keystickLog"
 int main(int argc, char *argv[])
 {
   int dump = 0;
@@ -1632,7 +1633,8 @@ int main(int argc, char *argv[])
   int charHandled;
 
 #ifdef ENABLE_LOG_FILE
-    string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/keystickLog");
+    //string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/keystickLog");
+    string file(KEYSTICKLOG);
     logObject.initializeLog(file);
 #endif
   // process command line args, indexing argv[] from [1]

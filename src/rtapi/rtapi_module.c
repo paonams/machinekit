@@ -327,7 +327,7 @@ int _rtapi_init(const char *modname) {
     int n, module_id;
     module_data *module;
 
-    RTAPIDBG("initing module %s",  modname);
+    RTAPIERR("initing module %s",  modname);
 
     /* get the mutex */
     rtapi_mutex_get(&(rtapi_data->mutex));
@@ -359,7 +359,7 @@ int _rtapi_init(const char *modname) {
 		       "RTMOD%03d", module_id);
     }
     rtapi_data->rt_module_count++;
-    RTAPIDBG("module '%s' loaded, ID: %d",
+    RTAPIERR("module '%s' loaded, ID: %d",
 	     module->name, module_id);
     rtapi_mutex_give(&(rtapi_data->mutex));
     return module_id;
@@ -448,7 +448,8 @@ int _rtapi_init(const char *modname) {
     struct shm_status sm;
     int retval;
 
-    ULAPIDBG("initing module '%s'", modname);
+    //ULAPIDBG("initing module '%s'", modname);
+    ULAPIERR("initing module '%s'", modname);
 
     errno = 0;
 
@@ -527,7 +528,7 @@ int _rtapi_init(const char *modname) {
     }
     rtapi_data->ul_module_count++;
     rtapi_mutex_give(&(rtapi_data->mutex));
-    ULAPIDBG("module '%s' inited, ID = %02d",
+    ULAPIERR("module '%s' inited, ID = %02d",
 	     module->name, module_id);
     return module_id;
 }

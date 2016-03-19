@@ -113,6 +113,7 @@ LOCMEM::~LOCMEM()
 
 CMS_STATUS LOCMEM::main_access(void *local_address)
 {
+    rcs_print_error("LOCMEM::main_access size %ld\n", size);
     internal_access(lm_addr, size, local_address);
     return status;
 }

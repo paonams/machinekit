@@ -813,6 +813,8 @@ int cms_create(CMS ** cms, const char *buffer_line, const char *proc_line,
 	*cms = new PHANTOMMEM(buffer_line, proc_line);
 	rcs_print_debug(PRINT_CMS_CONFIG_INFO, "%p = new PHANTOMEM(%s,%s)\n",
 	    *cms, buffer_line, proc_line);
+	rcs_print_error("cms_create %p = new PHANTOMEM(%s,%s)\n",
+	    *cms, buffer_line, proc_line);
 	if (NULL == *cms) {
 	    if (verbose_nml_error_messages) {
 		rcs_print_error
@@ -875,6 +877,8 @@ int cms_create(CMS ** cms, const char *buffer_line, const char *proc_line,
 	    *cms = new TCPMEM(buffer_line, proc_line);
 	    rcs_print_debug(PRINT_CMS_CONFIG_INFO, "%p = new TCPMEM(%s,%s)\n",
 		*cms, buffer_line, proc_line);
+	    rcs_print_error("cms_create %p = new TCPMEM(%s,%s)\n",
+		*cms, buffer_line, proc_line);
 	    if (NULL == *cms) {
 		if (verbose_nml_error_messages) {
 		    rcs_print_error
@@ -904,6 +908,9 @@ int cms_create(CMS ** cms, const char *buffer_line, const char *proc_line,
 		set_to_master);
 	    rcs_print_debug(PRINT_CMS_CONFIG_INFO,
 		"%p = new SHMEM(%s,%s,%d,%d)\n", *cms, buffer_line,
+		proc_line, set_to_server, set_to_master);
+	    rcs_print_error(
+		"cms_create %p = new SHMEM(%s,%s,%d,%d)\n", *cms, buffer_line,
 		proc_line, set_to_server, set_to_master);
 	    if (NULL == *cms) {
 		if (verbose_nml_error_messages) {
@@ -935,6 +942,9 @@ int cms_create(CMS ** cms, const char *buffer_line, const char *proc_line,
 		set_to_master);
 	    rcs_print_debug(PRINT_CMS_CONFIG_INFO,
 		"%p = new LOCMEM(%s,%s,%d,%d)\n", *cms, buffer_line,
+		proc_line, set_to_server, set_to_master);
+	    rcs_print_error(
+		"cms_create %p = new LOCMEM(%s,%s,%d,%d)\n", *cms, buffer_line,
 		proc_line, set_to_server, set_to_master);
 	    if (NULL == *cms) {
 		if (verbose_nml_error_messages) {

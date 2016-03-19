@@ -1710,14 +1710,15 @@ static void initMain()
     operator_display_string[LINELEN-1] = 0;
     programStartLine = 0;
 }
-
+#define EMCLCDLOG "/etc/mlabs/log/emclcdLog"
 int main(int argc, char *argv[])
 {
     int opt;
 
     initMain();
 #ifdef ENABLE_LOG_FILE
-    string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/emclcdLog");
+    //string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/emclcdLog");
+    string file(EMCLCDLOG);
     logObject.initializeLog(file);
 #endif
     printf("emclcd starting\n");

@@ -102,6 +102,7 @@ int main(int argc, char **argv)
     /* set default for other options */
     keep_going = 0;
     /* start parsing the command line, options first */
+   fprintf(stderr,"halcmd main '%s'\n", inifile);
     while(1) {
         c = getopt(argc, argv, "+RCfi:kqQsvVhu:U:P");
         if(c == -1) break;
@@ -257,11 +258,13 @@ int main(int argc, char **argv)
         }
     }
 
+    fprintf(stderr,"halcmd: before halcmd_startup\n");
     if ( halcmd_startup(0, uri, service_uuid) != 0 ) return 1;
 
     errorcount = 0;
     /* HAL init is OK, let's process the command(s) */
     if (srcfile == NULL) {
+        fprintf(stderr,"halcmd: with srcfile == NULL\n");
 #ifndef NO_INI
         if(halcmd_inifile) {
             fprintf(stderr, "-i may only be used together with -f\n");
@@ -277,6 +280,7 @@ int main(int argc, char **argv)
             }
         }
     } else {
+        fprintf(stderr,"halcmd: with srcfile != NULL\n");
 	/* read command line(s) from 'srcfile' */
 	while (get_input(srcfile, raw_buf, MAX_CMD_LEN)) {
 	    char *tokens[MAX_TOK+1];

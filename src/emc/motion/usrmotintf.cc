@@ -683,7 +683,7 @@ int usrmotInit(const char *modname)
     module_id = rtapi_init(modname);
     if (module_id < 0) {
 	fprintf(stderr,
-	    "usrmotintf: ERROR: rtapi init failed\n");
+	    "usrmotintf: ERROR: rtapi init failed for modname %s\n", modname);
 	return -1;
     }
     /* get shared memory block from RTAPI */

@@ -20,7 +20,9 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <dirent.h>
+#ifndef	__UCLIBC__
 #include <mcheck.h>
+#endif
 #include "rcs.hh"
 #include "posemath.h"		// PM_POSE, TO_RAD
 #include "emc.hh"		// EMC NML
@@ -49,10 +51,12 @@
 LogClass logObject;
 #endif
 
-#define NC_FILES_DIR		__DIR__"/nc_files"
+//#define NC_FILES_DIR		__DIR__"/nc_files"
+#define NC_FILES_DIR		"/etc/mlabs/build/machinekit/configs/nc_files"
 #define DYNAMIC_JSON		"/data/emc_dynamic.json"
 #define CONFIG_JSON		"/data/emc_config.json"
-#define WWWROOT			__DIR__"/www"
+//#define WWWROOT			__DIR__"/www"
+#define WWWROOT			"/etc/mlabs/build/machinekit/www"
 #define WWWPORT			"8080"
 
 typedef std::pair<std::string,std::string>Cmd;
@@ -470,7 +474,7 @@ void term_handler(int i)
 }
 
 
-
+#define EMCWEBLOG "/etc/mlabs/log/emcwebLog"
 int main(int argc, char* argv[])
 {
     rcs_print("src/emc/usr_intf/emcweb.cc main FUNCTION\n ");
@@ -479,7 +483,8 @@ int main(int argc, char* argv[])
     std::string wwwroot(WWWROOT);
     std::string wwwport(WWWPORT);
 #ifdef ENABLE_LOG_FILE
-    string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/emcwebLog");
+    //string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/emcwebLog");
+    string file(EMCWEBLOG);
     logObject.initializeLog(file);
 #endif
 
