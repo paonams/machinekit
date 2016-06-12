@@ -36,17 +36,17 @@ USERSRCS += $(LIBRS274SRCS)
 
 $(call TOOBJSDEPS, $(LIBRS274SRCS)) : EXTRAFLAGS=-fPIC  $(BOOST_DEBUG_FLAGS) 
 
-TARGETS += ../lib/librs274.so ../lib/librs274.so.0
+TARGETS += $(SHAREDOBJ_PATH)/librs274.so $(SHAREDOBJ_PATH)/librs274.so.0
 
-../lib/librs274.so.0: $(patsubst %.cc,objects/%.o,$(LIBRS274SRCS)) \
-	../lib/liblinuxcncini.so \
-	../lib/libpyplugin.so \
-	../lib/liblinuxcnchal.so.0 \
-	../lib/librtapi_math.so.0 
-	$(ECHO) Linking $(notdir $@)
+$(SHAREDOBJ_PATH)/librs274.so.0: $(patsubst %.cc,objects/%.o,$(LIBRS274SRCS)) \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so \
+	$(SHAREDOBJ_PATH)/libpyplugin.so \
+	$(SHAREDOBJ_PATH)/liblinuxcnchal.so.0 \
+	$(SHAREDOBJ_PATH)/librtapi_math.so.0 
+	$(ECHO) librs274.so.0 Linking $(notdir $@)
 	@mkdir -p ../lib
 	@rm -f $@
-	$(Q)$(CXX) -g $(LDFLAGS) -Wl,-soname,$(notdir $@) -shared -o $@ $^ \
+	$(Q)$(CXX) -g $(LDFLAGS) -Wl,-soname,$(notdir $@) -Wl,-M,-Map,$@.map,--cref -shared -o $@ $^ \
 	    -lstdc++ $(BOOST_PYTHON_LIBS) -l$(LIBPYTHON) -ldl
 
 ../include/%.h: ./emc/rs274ngc/%.h
@@ -57,10 +57,10 @@ TARGETS += ../lib/librs274.so ../lib/librs274.so.0
 GCODEMODULESRCS := emc/rs274ngc/gcodemodule.cc
 PYSRCS += $(GCODEMODULESRCS)
 
-GCODEMODULE := ../lib/python/gcode.so
-$(GCODEMODULE): $(call TOOBJS, $(GCODEMODULESRCS)) ../lib/librs274.so.0
+GCODEMODULE := $(SHAREDOBJ_PATH)/python/gcode.so
+$(GCODEMODULE): $(call TOOBJS, $(GCODEMODULESRCS)) $(SHAREDOBJ_PATH)/librs274.so.0
 	$(ECHO) Linking python module $(notdir $@)
-	$(CXX) $(LDFLAGS) -shared -o $@ $^ -lstdc++
+	$(CXX) $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref -shared -o $@ $^ -lstdc++
 
 
 PYTARGETS += $(GCODEMODULE)
@@ -72,13 +72,13 @@ PYSRCS += $(PREVIEWMODULESRCS)
 $(call TOOBJSDEPS, $(PREVIEWMODULESRCS)) : Makefile.inc
 $(call TOOBJSDEPS, $(PREVIEWMODULESRCS)) : EXTRAFLAGS += -Ihal/haltalk $(CZMQ_CFLAGS) $(PROTOBUF_CFLAGS)
 
-PREVIEWMODULE := ../lib/python/preview.so
+PREVIEWMODULE := $(SHAREDOBJ_PATH)/python/preview.so
 $(PREVIEWMODULE): $(call TOOBJS, $(PREVIEWMODULESRCS)) \
-	../lib/librs274.so.0 \
-	../lib/liblinuxcnc-pb2++.so.0 \
-	../lib/libmtalk.so
+	$(SHAREDOBJ_PATH)/librs274.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
+	$(SHAREDOBJ_PATH)/libmtalk.so
 	$(ECHO) Linking python module $(notdir $@)
-	$(CXX) $(LDFLAGS) -shared -o $@ $^ -lstdc++  $(CZMQ_LIBS)  $(PROTOBUF_LIBS)
+	$(CXX) $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref -shared -o $@ $^ -lstdc++  $(CZMQ_LIBS)  $(PROTOBUF_LIBS)
 
 
 PYTARGETS += $(PREVIEWMODULE)

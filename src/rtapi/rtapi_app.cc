@@ -180,6 +180,7 @@ static int do_one_item(char item_type_char,
 		       int idx,
 		       pb::Container &pbreply)
 {
+    LOG(__PRETTY_FUNCTION__<<" param_name "<<param_name<<"\n");
     char *endp;
     switch(item_type_char) {
     case 'l': {
@@ -227,6 +228,7 @@ static int do_module_args(void *module,
 			  const string &symprefix,
 			  pb::Container &pbreply)
 {
+    LOG(__PRETTY_FUNCTION__<<" symprefix "<<symprefix<<"\n");
     for(int i = 0; i < args.size(); i++) {
         string s(args.Get(i));
 	remove_quotes(s);
@@ -310,6 +312,7 @@ static int do_kmodinst_args(const string &comp,
 			  pbstringarray_t args,
 			  pb::Container &pbreply)
 {
+    LOG(__PRETTY_FUNCTION__<<" comp "<<comp<<"\n");
     for (int i = 0; i < args.size(); i++) {
         string s(args.Get(i));
 	remove_quotes(s);
@@ -364,6 +367,7 @@ static void usrfunct_error(const int retval,
 			   pbstringarray_t args,
 			   pb::Container &pbreply)
 {
+    LOG(__PRETTY_FUNCTION__<<" func "<<func<<"\n");
     if (retval >= 0) return;
     string s = pbconcat(args);
     note_printf(pbreply, "hal_call_usrfunct(%s,%s) failed: %d - %s",
@@ -375,6 +379,7 @@ static void separate_kv(pbstringarray_t &kvpairs,
 		    pbstringarray_t &leftovers,
 		    const pbstringarray_t &args)
 {
+    LOG(__PRETTY_FUNCTION__<<"\n");
     for(int i = 0; i < args.size(); i++) {
         string s(args.Get(i));
 	remove_quotes(s);
@@ -394,6 +399,7 @@ static int do_newinst_cmd(int instance,
     int retval = -1;
 
 
+    LOG(__PRETTY_FUNCTION__<<" comp "<<comp<<" instname "<<instname<<"\n");
     if (kernel_threads(flavor)) {
 	string s = pbconcat(args);
 	retval = do_kmodinst_args(comp,args,pbreply);
@@ -462,6 +468,7 @@ static int do_delinst_cmd(int instance,
     string s;
 
 
+    LOG(__PRETTY_FUNCTION__<<" instname "<<instname<<"\n");
     if (kernel_threads(flavor)) {
 	return procfs_cmd(PROCFS_RTAPICMD,"call delinst %s", instname.c_str());
     } else {
@@ -489,6 +496,7 @@ static int do_callfunc_cmd(int instance,
 {
     int retval = -1;
 
+    LOG(__PRETTY_FUNCTION__<<" func "<<func<<"\n");
     if (kernel_threads(flavor)) {
 	string s = pbconcat(args);
 	rtapi_print_msg(RTAPI_MSG_ERR, "do_callfunc_cmd kernel_threads MT_RTAPI_APP_CALLFUNC func (%s) args (%s)\n",
@@ -502,11 +510,13 @@ static int do_callfunc_cmd(int instance,
 	}
 	const char **argv = pbargv(args);
 	int ureturn = 0;
+	rtapi_print_msg(RTAPI_MSG_ERR, "before do_callfunc_cmd non-kernel_threads MT_RTAPI_APP_CALLFUNC func (%s) args (%s)\n",
+		func.c_str(), pbconcat(args).c_str());
 	retval = call_usrfunct(func.c_str(),
 			       args.size(),
 			       argv,
 			       &ureturn);
-	rtapi_print_msg(RTAPI_MSG_ERR, "do_callfunc_cmd non-kernel_threads MT_RTAPI_APP_CALLFUNC func (%s) args (%s)\n",
+	rtapi_print_msg(RTAPI_MSG_ERR, "after do_callfunc_cmd non-kernel_threads MT_RTAPI_APP_CALLFUNC func (%s) args (%s)\n",
 		func.c_str(), pbconcat(args).c_str());
 	if (argv) free(argv);
 	if (retval == 0) retval = ureturn;
@@ -527,6 +537,7 @@ static int do_load_cmd(int instance,
     void *module;
     int retval;
 
+    LOG(__PRETTY_FUNCTION__<<" name "<<name<<"\n");
     if (w == NULL) {
 	if (kernel_threads(flavor)) {
 	    string cmdargs = pbconcat(args, " ", "'");
@@ -621,6 +632,7 @@ static int do_load_cmd(int instance,
     void *w = modules[name];
     int retval = 0;
 
+    LOG(__PRETTY_FUNCTION__<<" name "<<name<<"\n");
     if (w == NULL) {
 	note_printf(reply, "unload: '%s' not loaded\n",
 		    name.c_str());
@@ -654,6 +666,7 @@ static void exit_actions(int instance)
 {
     pb::Container reply;
     size_t index = loading_order.size() - 1;
+    LOG(__PRETTY_FUNCTION__<<" instance "<<instance<<"\n");
     for(std::vector<std::string>::reverse_iterator rit = loading_order.rbegin();
 	rit != loading_order.rend(); ++rit, --index) {
 	do_unload_cmd(instance, *rit, reply);
@@ -667,6 +680,7 @@ static int init_actions(int instance)
 
     get_rtapi_config(moddir,"MODULES",PATH_MAX);
 
+    LOG(__PRETTY_FUNCTION__<<" instance "<<instance<<"\n");
     if (kernel_threads(flavor)) {
 	std::cout<<"src/rtapi/rtapi_app.cc init_actions kernel thread inside\n";
 	// kthreads cant possibly run without shmdrv, so bail
@@ -745,6 +759,7 @@ static int attach_global_segment()
     int size = 0;
     int tries = 10; // 5 sec deadline for msgd/globaldata to come up
 
+    LOG(__PRETTY_FUNCTION__<<" globalkey "<<globalkey<<"\n");
     shm_common_init();
     do {
 	retval = shm_common_new(globalkey, &size,
@@ -795,6 +810,7 @@ static int rtapi_request(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
 
     pb::Container pbreq, pbreply;
 
+    LOG(__PRETTY_FUNCTION__<<"\n");
     if (!pbreq.ParseFromArray(zframe_data(request_frame),
 			      zframe_size(request_frame))) {
 	rtapi_print_msg(RTAPI_MSG_ERR, "cant decode request from %s (size %zu)",
@@ -815,6 +831,9 @@ static int rtapi_request(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
     rtapi_print_msg(RTAPI_MSG_ERR, "rtapi_request with pbreq.type (%s)\n",
 	    ContainerType_Name(pbreq.type()).c_str());
 
+    string buffer;
+    TextFormat::PrintToString(pbreq, &buffer);
+    LOG(__PRETTY_FUNCTION__<<" req.type "<<buffer<<"\n");
     switch (pbreq.type()) {
     case pb::MT_RTAPI_APP_PING:
 	char buffer[LINELEN];
@@ -1027,10 +1046,16 @@ static int rtapi_request(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
 static void btprint(const char *prefix, const char *fmt, ...)
 {
     va_list args;
+    static char temp_buffer[400];
+    memset(temp_buffer, 400, 0);
     va_start(args, fmt);
 
     rtapi_msg_handler_t  print = rtapi_get_msg_handler();
     print(RTAPI_MSG_ERR, fmt, args);
+    vsnprintf(temp_buffer, sizeof(temp_buffer), fmt, args);
+#ifdef ENABLE_LOG_FILE
+    LOG(temp_buffer);
+#endif
     va_end(args);
 }
 
@@ -1050,7 +1075,9 @@ static void sigaction_handler(int sig, siginfo_t *si, void *uctx)
 	rtapi_print_msg(RTAPI_MSG_ERR,
 			"signal %d - '%s' received, dumping core (current dir=%s)",
 			sig, strsignal(sig), get_current_dir_name());
-	backtrace("", "rtapi_app", btprint, 3);
+        LOG("RTAPI_APP "<<__FUNCTION__<<" signal "<<sig<<" : "<<strsignal(sig)<<"\n");
+        setstacktracemap("rtapi_app");
+	custom_backtrace("", "rtapi_app", btprint, 3);
 	if (global_data)
 	    global_data->rtapi_app_pid = 0;
 
@@ -1132,13 +1159,14 @@ static int mainloop(size_t  argc, char **argv)
     size_t max_procname_len = (argv0_len > procname_len) ?
 	(procname_len) : (argv0_len);
 
+    LOG(__PRETTY_FUNCTION__<<"\n");
     strncpy(argv[0], proctitle, max_procname_len);
     memset(&argv[0][max_procname_len], '\0', argv0_len - max_procname_len);
 
     for (i = 1; i < argc; i++)
 	memset(argv[i], '\0', strlen(argv[i]));
 
-    backtrace_init(proctitle);
+    //backtrace_init(proctitle);
     std::cout<<"src/rtapi/rtapi_app.cc mainloop proctitle "<<proctitle<<"\n";
 
     // set this thread's name so it can be identified in ps/top as
@@ -1359,6 +1387,7 @@ static int configure_memory(void)
     unsigned int i, pagesize;
     char *buf;
 
+    LOG(__PRETTY_FUNCTION__<<"\n");
     if (global_data->rtapi_thread_flavor != RTAPI_POSIX_ID) {
 	// Realtime tweak requires privs
 	/* Lock all memory. This includes all current allocations (BSS/data)
@@ -1416,6 +1445,7 @@ exit_handler(void)
 {
     struct rusage rusage;
 
+    LOG(__PRETTY_FUNCTION__<<"\n");
     getrusage(RUSAGE_SELF, &rusage);
     if ((rusage.ru_majflt - majflt) > 0) {
 	// RTAPI already shut down here
@@ -1433,6 +1463,7 @@ static int harden_rt()
     core_limit.rlim_cur = RLIM_INFINITY;
     core_limit.rlim_max = RLIM_INFINITY;
 
+    LOG(__PRETTY_FUNCTION__<<"\n");
     if (setrlimit(RLIMIT_CORE, &core_limit) < 0)
 	rtapi_print_msg(RTAPI_MSG_WARN, 
 			"setrlimit: %s - core dumps may be truncated or non-existant\n",
@@ -1546,11 +1577,25 @@ static struct option long_options[] = {
     {"interfaces",required_argument, 0, 'n'},
     {0, 0, 0, 0}
 };
+#if 0
+int setstacktracemap(char* pidname)
+{
+    char buff[64];
+    int ret;
 
+    sprintf(buff, "cat /proc/%d/maps > /etc/mlabs/log/%s.map", getpid(), pidname);
+
+    ret = system(buff);
+    return ret;
+}
+#endif
+
+#define ENABLE_LOG_FILE
 #define RTAPI_APPLOG "/etc/mlabs/log/rtapi_appLog"
 int main(int argc, char **argv)
 {
     int c;
+    int ret;
     progname = argv[0];
     inifile =  getenv("MACHINEKIT_INI");
 
@@ -1560,6 +1605,7 @@ int main(int argc, char **argv)
 #endif
     rtapi_print_msg(RTAPI_MSG_ERR, "%s: src/rtapi/rtapi_app.cc called\n",
 	    __FUNCTION__);
+    LOG("RTAPI_APP MAIN argv[0] "<<argv[0]<<"\n");
     uuid_generate_time(process_uuid);
     uuid_unparse(process_uuid, process_uuid_str);
 
@@ -1569,6 +1615,8 @@ int main(int argc, char **argv)
     // max out async syslog buffers for slow system in debug mode
     tunelog_async(99,1000);
 
+   ret = setstacktracemap("rtapi_app");
+   fprintf(stderr, "setstacktracemap ret %d", ret);
     while (1) {
 	int option_index = 0;
 	int curind = optind;
@@ -1711,8 +1759,10 @@ static void rtapi_app_msg_handler(msg_level_t level, const char *fmt,
     // during startup the global segment might not be
     // available yet, so use stderr until then
     if (global_data) {
+    LOG("rtapi_app_msg_handler calling vs_ring_write\n");
 	vs_ring_write(level, fmt, ap);
     } else {
+    LOG("rtapi_app_msg_handler calling vsyslog_async\n");
 	vsyslog_async(rtapi2syslog(level), fmt, ap);
     }
 }

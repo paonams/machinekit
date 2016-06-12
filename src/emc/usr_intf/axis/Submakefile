@@ -4,9 +4,9 @@ MINIGLMODULESRCS := emc/usr_intf/axis/extensions/minigl.c
 TOGLMODULESRCS := emc/usr_intf/axis/extensions/_toglmodule.c
 PYSRCS += $(EMCMODULESRCS) $(MINIGLMODULESRCS) $(TOGLMODULESRCS)
 
-EMCMODULE := ../lib/python/linuxcnc.so
-MINIGLMODULE := ../lib/python/minigl.so
-TOGLMODULE := ../lib/python/_togl.so
+EMCMODULE := $(SHAREDOBJ_PATH)/python/linuxcnc.so
+MINIGLMODULE := $(SHAREDOBJ_PATH)/python/minigl.so
+TOGLMODULE := $(SHAREDOBJ_PATH)/python/_togl.so
 
 $(call TOOBJSDEPS, $(TOGLMODULESRCS))  : \
 	EXTRAFLAGS += $(ULFLAGS) $(TCL_CFLAGS)
@@ -14,10 +14,10 @@ $(call TOOBJSDEPS, $(TOGLMODULESRCS))  : \
 $(call TOOBJSDEPS, $(EMCMODULESRCS)) : Makefile.inc
 
 $(EMCMODULE): $(call TOOBJS, $(EMCMODULESRCS)) \
-	../lib/liblinuxcnc.a \
-	../lib/libnml.so.0 \
-	../lib/liblinuxcncini.so \
-	../lib/librtapi_math.so.0
+	$(SHAREDOBJ_PATH)/liblinuxcnc.a \
+	$(SHAREDOBJ_PATH)/libnml.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so \
+	$(SHAREDOBJ_PATH)/librtapi_math.so.0
 	$(ECHO) Linking python module $(notdir $@)
 	$(Q)$(CXX) $(LDFLAGS) -shared -o $@ $^ -L/usr/X11R6/lib -lGL
 

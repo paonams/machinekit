@@ -199,6 +199,7 @@ int hal_call_usrfunct(const char *name, const int argc, const char **argv, int *
 	int i __attribute__((cleanup(halpr_autorelease_mutex)));
 	rtapi_mutex_get(&(hal_data->mutex));
 
+	HALINFO("funct name %s", name);
 	funct = halpr_find_funct_by_name(name);
 	if (funct == NULL) {
 	    HALERR("funct '%s' not found", name);
@@ -455,10 +456,15 @@ hal_funct_t *halpr_find_funct_by_name(const char *name)
     int next;
     hal_funct_t *funct;
 
+    HALINFO("funct name %s", name);
     /* search function list for 'name' */
     next = hal_data->funct_list_ptr;
     while (next != 0) {
 	funct = SHMPTR(next);
+	if (funct == NULL){
+	    HALERR("funct from SHMPTR(next) is NULL");
+	    return 0;
+	}
 	if (strcmp(funct->name, name) == 0) {
 	    /* found a match */
 	    return funct;
@@ -487,6 +493,10 @@ hal_funct_t *halpr_find_funct_by_owner_id(const int owner_id,
     }
     while (next != 0) {
 	funct = SHMPTR(next);
+	if (funct == NULL){
+	    HALERR("funct from SHMPTR(next) is NULL");
+	    return 0;
+	}
 	if (funct->owner_id == owner_id) {
 	    /* found a match */
 	    return funct;

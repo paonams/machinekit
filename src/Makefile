@@ -90,9 +90,9 @@ include Makefile.inc
 #include $(SOFTWARE_ROOT)/custom/make/Rules.make
 #endif
 ifeq ($(origin PYTHONPATH),undefined)
-PYTHONPATH:=$(EMC2_HOME)/lib/python
+PYTHONPATH:=$(EMC2_HOME)/sharedobj/python
 else
-PYTHONPATH:=$(EMC2_HOME)/lib/python:$(PYTHONPATH)
+PYTHONPATH:=$(EMC2_HOME)/sharedobj/python:$(PYTHONPATH)
 endif
 export PYTHONPATH
 else
@@ -157,7 +157,7 @@ endif # BUILD_ALL_FLAVORS
 
 OBJDIR := objects/$(RTDIR_EXT)
 DEPDIR := depends/$(RTDIR_EXT)
-RTLIBDIR := ../rtlib/$(RTDIR_EXT)
+RTLIBDIR := $(SHAREDOBJ_PATH)/rtlib/$(RTDIR_EXT)
 
 DEP = $(1) -MM -MG -MT "$(2)" $(4) -o $(3).tmp && mv -f "$(3)".tmp "$(3)"
 
@@ -371,9 +371,9 @@ CXXFLAGS := $(INCLUDE) $(CXXFLAGS) \
 	 -DGIT_BUILD_SHA=\"'$(GIT_BUILD_SHA)'\"
 
 ifeq ($(RUN_IN_PLACE),yes)
-LDFLAGS := -L$(LIB_DIR) -Wl,-rpath,$(LIB_DIR)
+LDFLAGS := -rdynamic -L$(LIB_DIR) -Wl,-rpath,$(LIB_DIR)
 else
-LDFLAGS := -Wl,-rpath-link,../lib
+LDFLAGS := -rdynamic -Wl,-rpath-link,../lib
 endif
 
 # Rules to make .o (object) files
@@ -1004,11 +1004,11 @@ endif
 	    if test $${flavor%-kernel} = $${flavor}; then \
 		echo Installing modules for userland flavor $$flavor; \
 		$(DIR) $(DESTDIR)$(EMC2_RTLIB_BASE_DIR)/$$flavor; \
-		$(FILE) ../rtlib/$$flavor/* \
+		$(FILE) $(SHAREDOBJ_PATH)/rtlib/$$flavor/* \
 		    $(DESTDIR)$(EMC2_RTLIB_BASE_DIR)/$$flavor; \
 	    else \
 		echo Installing modules for kthreads flavor $$flavor; \
-		for srcdir in ../rtlib/$$flavor/*; do \
+		for srcdir in $(SHAREDOBJ_PATH)/rtlib/$$flavor/*; do \
 		    kver=`basename $$srcdir`; \
 		    echo Installing modules for flavor $$flavor, kver $$kver; \
 		    $(DIR) $(DESTDIR)/lib/modules/$$kver/linuxcnc; \
@@ -1017,7 +1017,7 @@ endif
 	    fi; \
 	done
 ifeq ($(USE_SHMDRV),yes)
-	for srcdir in ../rtlib/shmdrv/*; do \
+	for srcdir in $(SHAREDOBJ_PATH)/rtlib/shmdrv/*; do \
 	    kver=`basename $$srcdir`; \
 	    echo Installing shmdrv.ko module for kernel version $$kver; \
 	    $(DIR) $(DESTDIR)/lib/modules/$$kver/linuxcnc; \
@@ -1258,6 +1258,11 @@ hal_gpio-objs := hal/drivers/hal_gpio.o
 obj-$(CONFIG_HAL_SPI) += hal_spi.o
 hal_spi-objs := hal/drivers/hal_spi.o
 endif
+
+#ifdef TARGET_PLATFORM_ODROID_XU
+obj-$(CONFIG_HAL_GPIO) += hal_odroidxu_gpio.o
+hal_odroidxu_gpio-objs := hal/drivers/hal_odroidxu_gpio.o
+#endif
 
 ifdef TARGET_PLATFORM_BEAGLEBONE
 ifeq ($(BUILD_SYS),user-dso)
@@ -1514,7 +1519,7 @@ $(RTLIBDIR)/%.so:
 	    -G __x86.get_pc_thunk.bx -G __i686.get_pc_thunk.bx \
 	    `xargs -r0n1 echo -G < $(OBJDIR)/$*.exp | grep -ve '^-G $$' | \
 	        sort -u` $(OBJDIR)/$*.tmp; fi
-	$(Q)$(CC) -shared -Bsymbolic $(LDFLAGS) -o $@ $(OBJDIR)/$*.tmp \
+	$(Q)$(CC) -Wl,-M,-Map,$@.map,--cref  -shared -Bsymbolic $(LDFLAGS) -o $@ $(OBJDIR)/$*.tmp \
 	$(EXTRA_LDFLAGS)
 
 $(sort $(RTDEPS)): $(DEPDIR)/%.d: %.c
@@ -1618,6 +1623,10 @@ ifdef TARGET_PLATFORM_RASPBERRY
 $(RTLIBDIR)/hal_gpio$(MODULE_EXT): $(addprefix $(OBJDIR)/,$(hal_gpio-objs))
 $(RTLIBDIR)/hal_spi$(MODULE_EXT): $(addprefix $(OBJDIR)/,$(hal_spi-objs))
 endif
+
+#ifdef TARGET_PLATFORM_ODROID_XU
+$(RTLIBDIR)/hal_odroidxu_gpio$(MODULE_EXT): $(addprefix $(OBJDIR)/,$(hal_odroidxu_gpio-objs))
+#endif
 
 ifdef TARGET_PLATFORM_ZEDBOARD
 $(RTLIBDIR)/hal_zed_gpio$(MODULE_EXT): $(addprefix $(OBJDIR)/,$(hal_zed_gpio-objs))
@@ -1732,7 +1741,7 @@ objects/var-%: Makefile $(wildcard $(SUBMAKEFILES)) Makefile.inc
 	@echo $($*) > $@.tmp
 	@sh move-if-change $@.tmp $@
 
-../lib/%.so: ../lib/%.so.0
+$(SHAREDOBJ_PATH)/%.so: $(SHAREDOBJ_PATH)/%.so.0
 	ln -sf $(notdir $<) $@
 
 cscope:

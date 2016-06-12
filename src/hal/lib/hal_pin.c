@@ -118,7 +118,7 @@ int hal_pin_new(const char *name, hal_type_t type, hal_pin_dir_t dir,
 	return -EINVAL;
     }
 
-    HALDBG("creating pin '%s'", name);
+    HALINFO("creating pin '%s'", name);
 
     {
 	hal_comp_t *comp  __attribute__((cleanup(halpr_autorelease_mutex)));

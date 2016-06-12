@@ -132,7 +132,7 @@ static void sigaction_handler(int sig, siginfo_t *si, void *uctx)
     syslog_async(LOG_ERR,"signal %d - '%s' received, dumping core (current dir=%s)",
 		    sig, strsignal(sig), get_current_dir_name());
 
-    backtrace("", "haltalk", btprint, 3);
+    custom_backtrace("", "haltalk", btprint, 3);
 
     closelog_async(); // let syslog_async drain
     sleep(1);
@@ -430,7 +430,7 @@ int main (int argc, char *argv[])
 	}
     }
     openlog_async(conf.progname, logopt , SYSLOG_FACILITY);
-    backtrace_init(argv[0]);
+    //backtrace_init(argv[0]);
 
     // ease debugging with gdb - disable all signal handling
     if (getenv("NOSIGHDLR") != NULL)

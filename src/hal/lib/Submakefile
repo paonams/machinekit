@@ -45,7 +45,7 @@ $(call TOOBJSDEPS, $(HALLIBSRCS)): EXTRAFLAGS += $(THREADS_RTFLAGS) -fPIC
 USERSRCS += $(HALLIBSRCS)
 USERSRCS += $(HALLIBMTALK_SRCS)
 
-HALLIB := ../lib/liblinuxcnchal.so
+HALLIB := $(SHAREDOBJ_PATH)/liblinuxcnchal.so
 
 
 # for now, link in ulapi  plus any referenced  objs directly
@@ -57,20 +57,21 @@ $(HALLIB).0: \
 	$(call TOOBJS, $(SHMDRVAPISRCS)) \
 	$(call TOOBJS, $(HALLIBMTALK_SRCS)) \
 	$(call TOOBJS, $(LIBINISRCS)) \
-	../lib/liblinuxcnc-pb2++.so
+	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so
 	$(ECHO) Creating shared library $(notdir $@)
-	@mkdir -p ../lib
+	@mkdir -p $(SHAREDOBJ_PATH)
 	@rm -f $@
 	$(Q)$(CC) $(LDFLAGS) -Wl,-rpath,$(EMC2_RTLIB_DIR) \
-	    -Wl,-soname,$(notdir $@) -shared \
+	    -Wl,-soname,$(notdir $@) -Wl,-M,-Map,$@.map,--cref -shared \
 	    -o $@ $^ -lstdc++ -ldl -lrt $(PROTOBUF_LIBS) $(PROTOCXXLIB) $(CZMQ_LIBS) $(RT_LDFLAGS)
 
 HALMODULESRCS := $(HALLIBDIR)/halmodule.cc
 PYSRCS += $(HALMODULESRCS)
 
-HALMODULE := ../lib/python/_hal.so
+HALMODULE := $(SHAREDOBJ_PATH)/python/_hal.so
 $(HALMODULE): $(call TOOBJS, $(HALMODULESRCS)) $(HALLIB)
 	$(ECHO) Linking python module $(notdir $@)
+	@mkdir -p $(SHAREDOBJ_PATH)/python
 	$(Q)$(CXX) $(LDFLAGS) -shared -o $@ $^
 
 TARGETS += $(HALLIB) $(HALLIB).0

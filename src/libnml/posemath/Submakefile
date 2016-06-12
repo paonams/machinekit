@@ -2,13 +2,13 @@ INCLUDES += libnml/posemath
 POSEMATHSRCS := $(addprefix libnml/posemath/, _posemath.c posemath.cc gomath.c sincos.c)
 $(call TOOBJSDEPS, $(POSEMATHSRCS)) : EXTRAFLAGS=-fPIC
 USERSRCS += $(POSEMATHSRCS) 
-TARGETS += ../lib/libposemath.so ../lib/libposemath.so.0
+TARGETS += $(SHAREDOBJ_PATH)/libposemath.so $(SHAREDOBJ_PATH)/libposemath.so.0
 
-../lib/libposemath.so.0: $(call TOOBJS,$(POSEMATHSRCS)) ../lib/librtapi_math.so.0
+$(SHAREDOBJ_PATH)/libposemath.so.0: $(call TOOBJS,$(POSEMATHSRCS)) $(SHAREDOBJ_PATH)/librtapi_math.so.0
 	$(ECHO) Creating shared library $(notdir $@)
-	@mkdir -p ../lib
+	@mkdir -p $(SHAREDOBJ_PATH)
 	@rm -f $@
-	@$(CXX) $(LDFLAGS) -Wl,-soname,$(notdir $@) -shared -o $@ $^
+	@$(CXX) $(LDFLAGS) -Wl,-soname,$(notdir $@) -Wl,-M,-Map,$@.map,--cref  -shared -o $@ $^
 
 ../include/%.h: ./libnml/posemath/%.h
 	cp $^ $@

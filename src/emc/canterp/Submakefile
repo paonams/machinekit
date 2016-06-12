@@ -1,9 +1,9 @@
 LIBCANTERPSRCS := emc/canterp/canterp.cc
 USERSRCS += $(LIBCANTERPSRCS)
-TARGETS += ../lib/libcanterp.so ../lib/libcanterp.so.0
+TARGETS += $(SHAREDOBJ_PATH)/libcanterp.so $(SHAREDOBJ_PATH)/libcanterp.so.0
 $(call TOOBJSDEPS, $(LIBCANTERPSRCS)) : EXTRAFLAGS=-fPIC
-../lib/libcanterp.so.0: $(patsubst %.cc,objects/%.o,$(LIBCANTERPSRCS)) ../lib/liblinuxcncini.so ../lib/librs274.so
+$(SHAREDOBJ_PATH)/libcanterp.so.0: $(patsubst %.cc,objects/%.o,$(LIBCANTERPSRCS)) $(SHAREDOBJ_PATH)/liblinuxcncini.so $(SHAREDOBJ_PATH)/librs274.so
 	$(ECHO) Linking $(notdir $@)
 	@mkdir -p ../lib
 	@rm -f $@
-	@$(CXX) $(LDFLAGS) -Wl,-soname,$(notdir $@) -shared -o $@ $^ -ldl
+	@$(CXX) $(LDFLAGS) -Wl,-soname,$(notdir $@) -Wl,-M,-Map,$@.map,--cref -shared -o $@ $^ -ldl

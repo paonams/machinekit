@@ -11,11 +11,11 @@ $(call TOOBJSDEPS, $(HALSHSRCS)) : EXTRAFLAGS = -fPIC
 $(call TOOBJSDEPS, hal/utils/halsh.c) : EXTRAFLAGS += $(TCL_CFLAGS)
 ifneq ($(MODE), target)
 ../tcl/hal.so: $(call TOOBJS, $(HALSHSRCS)) \
-	../lib/liblinuxcncini.so.0 \
-	../lib/liblinuxcnchal.so.0 \
-	../lib/liblinuxcnc-pb2++.so.0 \
-	../lib/libmtalk.so.0 \
-	../lib/librtapi_math.so.0
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnchal.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
+	$(SHAREDOBJ_PATH)/libmtalk.so.0 \
+	$(SHAREDOBJ_PATH)/librtapi_math.so.0
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CC) $(LDFLAGS) -shared $^  $(TCL_LIBS) -o $@
 TARGETS += ../tcl/hal.so
@@ -25,22 +25,23 @@ $(call TOOBJSDEPS, $(HALCMDCCSRCS)) : EXTRAFLAGS =  \
 	$(PROTOBUF_CFLAGS) $(CZMQ_CFLAGS) -fPIC
 
 ../bin/halcmd: $(call TOOBJS, $(HALCMDSRCS))  $(call TOOBJS, $(HALCMDCCSRCS)) \
-	../lib/liblinuxcncini.so.0 \
-	../lib/liblinuxcnchal.so.0 \
-	../lib/liblinuxcnc-pb2++.so.0 \
-	../lib/libmtalk.so.0 \
-	../lib/librtapi_math.so.0
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnchal.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
+	$(SHAREDOBJ_PATH)/libmtalk.so.0 \
+	$(SHAREDOBJ_PATH)/librtapi_math.so.0
 	$(ECHO) Linking $(notdir $@)
-	$(Q)$(CC) $(LDFLAGS) -o $@ $^ $(READLINE_LIBS)  -lncurses \
+	$(Q)$(CC) $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref -rdynamic -o $@ $^ $(READLINE_LIBS)  -lncurses \
 	$(PROTOBUF_LIBS) $(CZMQ_LIBS) $(AVAHI_LIBS) -lm -lstdc++
 TARGETS += ../bin/halcmd
 
 HALRMTSRCS := hal/utils/halrmt.c
 USERSRCS += $(HALRMTSRCS)
 
-../bin/halrmt: $(call TOOBJS, $(HALRMTSRCS)) ../lib/liblinuxcnchal.so.0
+../bin/halrmt: $(call TOOBJS, $(HALRMTSRCS)) $(SHAREDOBJ_PATH)/liblinuxcnchal.so.0\
+        $(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0
 	$(ECHO) Linking $(notdir $@)
-	$(Q)$(CC) $(LDFLAGS) -o $@ $^ -lpthread
+	$(Q)$(CC) $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref -o $@ $^ -lpthread
 TARGETS += ../bin/halrmt
 
 ifneq ($(GTK_VERSION),)
@@ -50,7 +51,7 @@ HALMETERSRCS := \
 
 USERSRCS += $(HALMETERSRCS)
 
-../bin/halmeter: $(call TOOBJS, $(HALMETERSRCS)) ../lib/liblinuxcnchal.so.0
+../bin/halmeter: $(call TOOBJS, $(HALMETERSRCS)) $(SHAREDOBJ_PATH)/liblinuxcnchal.so.0
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CC) $(LDFLAGS) -o $@ $^  $(GTK_LIBS)
 TARGETS += ../bin/halmeter
@@ -67,8 +68,8 @@ HALSCOPESRCS := \
 USERSRCS += $(HALSCOPESRCS)
 
 ../bin/halscope: $(call TOOBJS, $(HALSCOPESRCS)) \
-	../lib/liblinuxcnchal.so.0 \
-	../lib/librtapi_math.so.0
+	$(SHAREDOBJ_PATH)/liblinuxcnchal.so.0 \
+	$(SHAREDOBJ_PATH)/librtapi_math.so.0
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CC) $(LDFLAGS) -o $@ $^ $(GTK_LIBS)
 TARGETS += ../bin/halscope

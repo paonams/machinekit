@@ -25,10 +25,10 @@ HALTALK_LDFLAGS := \
 $(call TOOBJSDEPS, $(HALTALK_SRCS)) : EXTRAFLAGS += $(HALTALK_CXXFLAGS)
 
 ../bin/haltalk: $(call TOOBJS, $(HALTALK_SRCS)) \
-	../lib/libmtalk.so.0 \
-	../lib/liblinuxcnc-pb2++.so.0 \
-	../lib/liblinuxcnchal.so.0 \
-	../lib/liblinuxcncini.so.0
+	$(SHAREDOBJ_PATH)/libmtalk.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnchal.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CC) -o $@ $^ $(LDFLAGS) $(HALTALK_LDFLAGS)
 

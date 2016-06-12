@@ -4,13 +4,13 @@ EMCSVRSRCS := \
 USERSRCS += $(EMCSVRSRCS)
 
 ../bin/linuxcncsvr: $(call TOOBJS, $(EMCSVRSRCS)) \
-	../lib/liblinuxcnc.a \
-	../lib/libnml.so.0 \
-	../lib/liblinuxcncini.so.0 \
-	../lib/librtapi_math.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc.a \
+	$(SHAREDOBJ_PATH)/libnml.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
+	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
 	$(SOFTWARE_ROOT)/custom/lib/Log.so
 	$(ECHO) Linking $(notdir $@)
-	@$(CXX) $(LDFLAGS) -o $@ $^ 
+	@$(CXX) $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref -o $@ $^ 
 TARGETS += ../bin/linuxcncsvr
 
 # disabled:	emc/task/iotaskintf.cc
@@ -38,15 +38,17 @@ ifeq ($(MODE), target)
 LIBFLAGS =  -L$(TARGET_LIBFLAGS) -lintl
 endif
 ../bin/milltask: $(call TOOBJS, $(MILLTASKSRCS)) \
-	../lib/librs274.so.0 \
-	../lib/liblinuxcnc.a \
-	../lib/libnml.so.0 \
-	../lib/liblinuxcncini.so.0 \
-	../lib/libposemath.so.0 \
-	../lib/liblinuxcnchal.so.0 \
-	../lib/libpyplugin.so.0 \
-	../lib/librtapi_math.so.0 \
+	$(SHAREDOBJ_PATH)/librs274.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc.a \
+	$(SHAREDOBJ_PATH)/libnml.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
+	$(SHAREDOBJ_PATH)/libposemath.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnchal.so.0 \
+	$(SHAREDOBJ_PATH)/libpyplugin.so.0 \
+	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
+	$(SHAREDOBJ_PATH)/libmtalk.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
 	$(SOFTWARE_ROOT)/custom/lib/Log.so
 	$(ECHO) Linking $(notdir $@)
-	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(BOOST_PYTHON_LIBS) -l$(LIBPYTHON) $(LIBFLAGS)
+	$(Q)$(CXX) -Wl,-M,-Map,$@.map,--cref -o $@ $^ $(LDFLAGS) $(BOOST_PYTHON_LIBS) -l$(LIBPYTHON) $(LIBFLAGS)
 TARGETS += ../bin/milltask

@@ -77,13 +77,16 @@ PROTO_SPECS := $(wildcard $(PROTODIR)/*.proto)
 USERSRCS += $(PROTO_SPECS)
 
 # C bindings library
-PROTOCLIB = ../lib/liblinuxcnc-pb2.so
+#PROTOCLIB = ../lib/liblinuxcnc-pb2.so
+PROTOCLIB = $(SHAREDOBJ_PATH)/liblinuxcnc-pb2.so
 
 # C++ bindings library
-PROTOCXXLIB = ../lib/liblinuxcnc-pb2++.so
+#PROTOCXXLIB = ../lib/liblinuxcnc-pb2++.so
+PROTOCXXLIB = $(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so
 
 # Nanopb C bindings library
-NANOPROTOCLIB := ../lib/liblinuxcnc-npb.so
+#NANOPROTOCLIB := ../lib/liblinuxcnc-npb.so
+NANOPROTOCLIB := $(SHAREDOBJ_PATH)/liblinuxcnc-npb.so
 PROTOC_FLAGS :=
 PROTOCXX_LDFLAGS := $(PROTOBUF_LIBS)
 PROTOCXX_FLAGS :=
@@ -272,9 +275,9 @@ PROTO_JS_SRCS +=$(JSGEN)/nanopb.js
 ../lib/python/nanopb_generator.py: $(NANOPB)/generator/nanopb_generator.py
 	cp $^ $@
 
-../lib/python/proto/__init__.py:
-	@mkdir -p ../lib/python/proto
-	touch ../lib/python/proto/__init__.py
+$(SHAREDOBJ_PATH)/python/proto/__init__.py:
+	@mkdir -p $(SHAREDOBJ_PATH)/python/proto
+	touch $(SHAREDOBJ_PATH)/python/proto/__init__.py
 
 # the nanopb plugin executable
 ../lib/python/protoc-gen-nanopb: $(NANOPB)/generator/protoc-gen-nanopb
@@ -289,20 +292,20 @@ NANOPB_LIBSRCS = $(NANOPB_C_SRCS) $(PROTO_NANOPB_C_SRCS)
 $(call TOOBJSDEPS, $(NANOPB_LIBSRCS)) : EXTRAFLAGS += $(PROTO_NANOPB_CFLAGS) -fPIC
 
 $(NANOPROTOCLIB).0: $(patsubst %.c,objects/%.o,$(NANOPB_LIBSRCS))
-	$(ECHO) Linking $(notdir $@)
-	@mkdir -p ../lib
+	$(ECHO) NANOPROTOCLIB Linking $(notdir $@)
+	@mkdir -p $(SHAREDOBJ_PATH)
 	@rm -f $@
-	$(Q)$(CC) $(LDFLAGS) -Wl,-soname,$(notdir $@) -shared -o $@ $^
+	$(Q)$(CC) $(LDFLAGS) -Wl,-soname,$(notdir $@) -Wl,-M,-Map,$@.map,--cref -shared -o $@ $^
 
 
 # C++ bindings library
 $(call TOOBJSDEPS, $(PROTO_CXX_SRCS)) : EXTRAFLAGS += $(PROTOCXX_CXX_FLAGS)
 
 $(PROTOCXXLIB).0: $(patsubst %.cc,objects/%.o,$(PROTO_CXX_SRCS))
-	$(ECHO) Linking $(notdir $@)
-	@mkdir -p ../lib
+	$(ECHO) PROTOCXXLIB Linking $(notdir $@)
+	@mkdir -p $(SHAREDOBJ_PATH)
 	@rm -f $@
-	$(Q)$(CXX) $(LDFLAGS) -Wl,-soname,$(notdir $@) -shared -o $@ $^
+	$(Q)$(CXX) $(LDFLAGS) -Wl,-soname,$(notdir $@) -Wl,-M,-Map,$@.map,--cref -shared -o $@ $^
 
 # protoc generated headers are exported to ../include
 ../include/%.h: ./$(PBGEN)/%.h
@@ -361,4 +364,4 @@ TARGETS += $(NANOPROTOCLIB) $(NANOPROTOCLIB).0 \
 clean: machinetalk-clean
 machinetalk-clean:
 	rm -rf machinetalk/generated ../include/machinetalk
-	rm -f ../lib/python/nanopb_pb2.pyc
+	rm -f $(SHAREDOBJ_PATH)/python/nanopb_pb2.pyc

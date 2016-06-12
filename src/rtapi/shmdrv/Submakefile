@@ -61,10 +61,10 @@ objects/.shmdrv-built: $(SHMDRV_SRCS)
 		-C $$kdir \
 		M=$(BASEPWD)/objects/userland/$$kver \
 		CC=$(CC) KBUILD_VERBOSE=$(BUILD_VERBOSE) ARCH=$(ARCH_TYPE) LD=$(LD); \
-	    mkdir -p ../rtlib/userland/$$kver; \
+	    mkdir -p $(SHAREDOBJ_PATH)/rtlib/userland/$$kver; \
 	    cp objects/userland/$$kver/Module.symvers \
 		objects/userland/$$kver/shmdrv.ko \
-		../rtlib/userland/$$kver; \
+		$(SHAREDOBJ_PATH)/rtlib/userland/$$kver; \
 	done
 	touch $@
 
@@ -79,13 +79,13 @@ endif # BUILD_ALL_FLAVORS && USE_SHMDRV
 SHMDRVAPISRCS := rtapi/shmdrv/shmdrvapi.c 
 
 $(call TOOBJSDEPS, $(SHMDRVAPISRCS)): EXTRAFLAGS += -fPIC
-SHMDRVLIB := ../lib/liblinuxcncshm.so
+SHMDRVLIB := $(SHAREDOBJ_PATH)/liblinuxcncshm.so
 
 $(SHMDRVLIB).0: $(call TOOBJS, $(SHMDRVAPISRCS))
 	$(ECHO) Creating shared library $(notdir $@)
-	@mkdir -p ../lib
+	@mkdir -p $(SHAREDOBJ_PATH)
 	@rm -f $@
-	$(Q)$(CC) $(LDFLAGS)  -Wl,-soname,$(notdir $@) -shared \
+	$(Q)$(CC) $(LDFLAGS)  -Wl,-soname,$(notdir $@) -Wl,-M,-Map,$@.map,--cref -shared \
 	    -o $@ $^ -lrt
 USERSRCS += $(SHMDRVAPISRCS) 
 TARGETS += $(SHMDRVLIB) $(SHMDRVLIB).0
@@ -100,9 +100,9 @@ MUTEXWATCH_SRCS =  rtapi/shmdrv/mutexwatch.c
 $(call TOOBJSDEPS, $(MUTEXWATCH_SRCS)): \
 	EXTRAFLAGS +=  $(THREADS_RTFLAGS)
 
-../bin/mutexwatch: ../lib/liblinuxcncshm.so $(call TOOBJS, $(MUTEXWATCH_SRCS))
+../bin/mutexwatch: $(SHAREDOBJ_PATH)/liblinuxcncshm.so $(call TOOBJS, $(MUTEXWATCH_SRCS))
 	$(ECHO) Linking ../bin/mutexwatch $(notdir $@)
-	$(Q)$(CC)  $(LDFLAGS) -o $@ $^  ../lib/liblinuxcncshm.so -lrt
+	$(Q)$(CC)  $(LDFLAGS) -o $@ $^  $(SHAREDOBJ_PATH)/liblinuxcncshm.so -lrt
 
 USERSRCS += $(MUTEXWATCH_SRCS)
 TARGETS += ../bin/mutexwatch

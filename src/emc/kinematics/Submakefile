@@ -8,18 +8,19 @@ DELTAMODULESRCS := emc/kinematics/lineardeltakins.cc
 PYSRCS += $(DELTAMODULESRCS)
 $(call TOOBJS, $(DELTAMODULESRCS)): CFLAGS += -x c++ -Wno-declaration-after-statement
 
-DELTAMODULE := ../lib/python/lineardeltakins.so
+DELTAMODULE := $(SHAREDOBJ_PATH)/python/lineardeltakins.so
 $(DELTAMODULE): $(call TOOBJS, $(DELTAMODULESRCS))
 	$(ECHO) Linking python module $(notdir $@)
-	$(CXX) $(LDFLAGS) -shared -o $@ $^ $(BOOST_PYTHON_LIBS)
+	$(CXX) $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref -shared -o $@ $^ $(BOOST_PYTHON_LIBS)
 PYTARGETS += $(DELTAMODULE)
 
 ../bin/genserkins: $(call TOOBJS, $(GENSERKINSSRCS)) \
-	../lib/liblinuxcnchal.so \
-	../lib/libposemath.so \
-	../lib/librtapi_math.so.0
+	$(SHAREDOBJ_PATH)/liblinuxcnchal.so \
+	$(SHAREDOBJ_PATH)/libposemath.so \
+	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0
 	$(ECHO) Linking $(notdir $@)
-	$(Q)$(CC) $(LDFLAGS) -o $@ $^
+	$(Q)$(CC) $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref -o $@ $^
 TARGETS += ../bin/genserkins
 
 ../include/%.h: ./emc/kinematics/%.h

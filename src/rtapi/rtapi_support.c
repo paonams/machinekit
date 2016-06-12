@@ -229,8 +229,9 @@ void rtapi_print(const char *fmt, ...) {
 void rtapi_print_msg(int level, const char *fmt, ...) {
     va_list args;
 
-    if ((level <= rtapi_get_msg_level()) && 
-	(rtapi_get_msg_level() != RTAPI_MSG_NONE)) {
+//    if ((level <= rtapi_get_msg_level()) && 
+//	(rtapi_get_msg_level() != RTAPI_MSG_NONE)) {
+    if (1){
 	va_start(args, fmt);
 	rtapi_msg_handler(level, fmt, args);
 #ifdef ENABLE_LOG_FILE

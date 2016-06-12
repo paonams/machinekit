@@ -16,6 +16,6 @@ $(call TOOBJSDEPS, $(UPARPORT_SRCS)) : EXTRAFLAGS=-fPIC $(UPARPORT_FLAGS)
 	$(ECHO) Linking $(notdir $@)
 	mkdir -p ../rtlib
 	@rm -f $@
-	$(CC) -g $(LDFLAGS) -Wl,-soname,$(notdir $@) \
+	$(CC) -g $(LDFLAGS) -Wl,-soname,$(notdir $@) -Wl,-M,-Map,$@.map,--cref \
 	-shared -o $@ $^  $(UPARPORT_LIBS)
 

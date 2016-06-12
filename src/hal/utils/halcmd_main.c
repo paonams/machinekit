@@ -60,6 +60,7 @@
 #include <fnmatch.h>
 #include <search.h>
 #include <inifile.h>
+#include <sys/types.h>
 
 static int get_input(FILE *srcfile, char *buf, size_t bufsize);
 static void print_help_general(int showR);
@@ -73,6 +74,17 @@ extern char *logpath;
 *                   LOCAL FUNCTION DEFINITIONS                         *
 ************************************************************************/
 
+int setstacktracemap(char* pidname)
+{
+    char buff[64];
+    int ret;
+
+    sprintf(buff, "cat /proc/%d/maps > /etc/mlabs/log/%s.map", getpid(), pidname);
+
+    ret = system(buff);
+    return ret;
+}
+
 int main(int argc, char **argv)
 {
     int c, fd;
@@ -85,8 +97,10 @@ int main(int argc, char **argv)
     char *cf=NULL, *cw=NULL, *cl=NULL;
     char *uri = NULL; // NULL - use service discovery
     char *service_uuid = NULL; // must have a global uuid
+    int ret;
 
     inifile = getenv("MACHINEKIT_INI");
+    inifile = "/etc/mlabs/build/machinekit/etc/linuxcnc/machinekit.ini";
     /* use default if not specified by user */
     if (inifile == NULL) {
 	inifile = MACHINEKIT_INI;
@@ -103,6 +117,8 @@ int main(int argc, char **argv)
     keep_going = 0;
     /* start parsing the command line, options first */
    fprintf(stderr,"halcmd main '%s'\n", inifile);
+   ret = setstacktracemap("halcmd");
+   fprintf(stderr, "setstacktracemap ret %d", ret);
     while(1) {
         c = getopt(argc, argv, "+RCfi:kqQsvVhu:U:P");
         if(c == -1) break;

@@ -46,10 +46,11 @@ WEBTALK_LDFLAGS := 		\
 $(call TOOBJSDEPS, $(WEBTALK_SRCS)) : EXTRAFLAGS += $(WEBTALK_CXXFLAGS) $(EXPERIMENTAL)
 
 ../bin/webtalk: $(call TOOBJS, $(WEBTALK_SRCS)) \
-	../lib/libmtalk.so.0 \
-	../lib/liblinuxcnc-pb2++.so.0 \
-	../lib/liblinuxcnchal.so.0 \
-	../lib/libmtalk.so.0
+	$(SHAREDOBJ_PATH)/libmtalk.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnchal.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
+	$(SHAREDOBJ_PATH)/libmtalk.so.0
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CC) -g -o $@ $^ $(LDFLAGS) $(WEBTALK_LDFLAGS)
 

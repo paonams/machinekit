@@ -16,11 +16,11 @@ MESSAGEBUS_CXX_LDFLAGS=  $(CXX_PROTOLIB) $(PROTOBUF_LIBS) $(CZMQ_LIBS) -lstdc++ 
 $(call TOOBJSDEPS, $(MESSAGEBUS_SRCS)) : EXTRAFLAGS += $(MESSAGEBUS_CXX_CFLAGS)
 
 ../bin/messagebus: $(call TOOBJS, $(MESSAGEBUS_SRCS)) \
-	../lib/libmtalk.so.0 \
-	../lib/liblinuxcncini.so.0 \
-	../lib/liblinuxcnchal.so.0 \
-	../lib/liblinuxcnc-pb2++.so.0 \
-	../lib/liblinuxcnc-npb.so.0
+	$(SHAREDOBJ_PATH)/libmtalk.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnchal.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-npb.so.0
 	$(ECHO) Linking ../bin/messagebus $(notdir $@)
 	$(Q)$(CC) -o $@ $^  \
 	 $(MESSAGEBUS_CXX_LDFLAGS)
@@ -44,10 +44,10 @@ RFRAME_CXX_LDFLAGS=  $(CXX_PROTOLIB) $(PROTOBUF_LIBS) $(CZMQ_LIBS) -lstdc++
 $(call TOOBJSDEPS, $(RFRAME_SRCS)) : EXTRAFLAGS += $(RFRAME_CXX_CFLAGS)
 
 ../bin/rframe: $(call TOOBJS, $(RFRAME_SRCS)) \
-	../lib/liblinuxcncini.so.0 \
-	../lib/liblinuxcnchal.so.0 \
-	../lib/liblinuxcnc-pb2++.so.0 \
-	../lib/liblinuxcnc-npb.so.0
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnchal.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-npb.so.0
 	$(ECHO) Linking ../bin/rframe $(notdir $@)
 	$(Q)$(CC) -o $@ $^  \
 	 $(RFRAME_CXX_LDFLAGS)

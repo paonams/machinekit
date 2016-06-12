@@ -239,7 +239,7 @@ static int ulapi_load(rtapi_switch_t **ulapi_switch)
 	return -EINVAL;
     }
 #undef EMC2_RTLIB_DIR
-#define EMC2_RTLIB_DIR "/etc/mlabs/build/machinekit/rtlib"
+#define EMC2_RTLIB_DIR "/etc/mlabs/build/machinekit/sharedobj/rtlib"
     snprintf(ulapi_lib_fname,PATH_MAX,"%s/%s-%s%s",
 	     EMC2_RTLIB_DIR, ulapi_lib, flavor->name, flavor->so_ext);
 

@@ -52,38 +52,38 @@ endif
 CFLAGS +=pthread
 ifneq ($(MODE), target)
 ../tcl/linuxcnc.so: $(call TOOBJS, $(EMCSHSRCS)) \
-	../lib/liblinuxcnc.a \
-	../lib/liblinuxcncini.so.0 \
-	../lib/libnml.so.0
+	$(SHAREDOBJ_PATH)/liblinuxcnc.a \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
+	$(SHAREDOBJ_PATH)/libnml.so.0
 	$(ECHO) Linking $(notdir $@)
-	$(Q)$(CXX) -shared $(LDFLAGS) -o $@ $(TCL_CFLAGS) $^ $(TCL_LIBS) -lXinerama
+	$(Q)$(CXX) -Wl,-M,-Map,$@.map,--cref -shared $(LDFLAGS) -o $@ $(TCL_CFLAGS) $^ $(TCL_LIBS) -lXinerama
 TARGETS += ../tcl/linuxcnc.so
 endif
 ../bin/linuxcncrsh: $(call TOOBJS, $(EMCRSHSRCS)) \
-	../lib/liblinuxcnc.a \
-	../lib/libnml.so.0 \
-	../lib/liblinuxcncini.so.0 \
-	../lib/librtapi_math.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc.a \
+	$(SHAREDOBJ_PATH)/libnml.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
+	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
 	$(SOFTWARE_ROOT)/custom/lib/Log.so
 	$(ECHO) Linking $(notdir $@)
-	$(Q)$(CXX) $(LDFLAGS) -o $@ $^ -lpthread
+	$(Q)$(CXX) $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref -o $@ $^ -lpthread
 TARGETS += ../bin/linuxcncrsh
 
 ../bin/schedrmt: $(call TOOBJS, $(EMCSCHEDSRCS)) \
-	../lib/liblinuxcnc.a \
-	../lib/libnml.so.0 \
-	../lib/liblinuxcncini.so.0 \
-	../lib/librtapi_math.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc.a \
+	$(SHAREDOBJ_PATH)/libnml.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
+	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
 	$(SOFTWARE_ROOT)/custom/lib/Log.so
 	$(ECHO) Linking $(notdir $@)
-	$(Q)$(CXX) $(LDFLAGS) -o $@ $^ -lpthread
+	$(Q)$(CXX) $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref -o $@ $^ -lpthread
 TARGETS += ../bin/schedrmt
 
 ../bin/linuxcnclcd: $(call TOOBJS, $(EMCLCDSRCS)) \
-	../lib/liblinuxcnc.a \
-	../lib/libnml.so.0 \
-	../lib/liblinuxcncini.so.0 \
-	../lib/librtapi_math.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc.a \
+	$(SHAREDOBJ_PATH)/libnml.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
+	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
 	$(SOFTWARE_ROOT)/custom/lib/Log.so
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CXX) $(LDFLAGS) -o $@ $^
@@ -91,11 +91,12 @@ TARGETS += ../bin/linuxcnclcd
 
 
 ../bin/halui: $(call TOOBJS, $(HALUISRCS)) \
-	../lib/liblinuxcnc.a \
-	../lib/liblinuxcncini.so.0 \
-	../lib/libnml.so.0 \
-	../lib/liblinuxcnchal.so.0 \
-	../lib/librtapi_math.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc.a \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
+	$(SHAREDOBJ_PATH)/libnml.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnchal.so.0 \
+	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
 	$(SOFTWARE_ROOT)/custom/lib/Log.so
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CXX) $(LDFLAGS) -o $@ $^ 
@@ -103,10 +104,10 @@ TARGETS += ../bin/halui
 
 ifeq "$(HAVE_NCURSES)" "yes"
 ../bin/keystick: $(call TOOBJS, $(KEYSTICKSRCS)) \
-	../lib/liblinuxcnc.a \
-	../lib/libnml.so.0 \
-	../lib/liblinuxcncini.so.0 \
-	../lib/librtapi_math.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc.a \
+	$(SHAREDOBJ_PATH)/libnml.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
+	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
 	$(SOFTWARE_ROOT)/custom/lib/Log.so
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CXX) $(LDFLAGS) -o $@ $^ $(KEYSTICKLIBS)
@@ -116,10 +117,10 @@ endif
 ifeq "$(HAVE_XAW)" "yes"
 $(call TOOBJSDEPS,$(XEMCSRCS)): EXTRAFLAGS = $(CFLAGS_X)
 ../bin/xlinuxcnc: $(call TOOBJS, $(XEMCSRCS)) \
-	../lib/liblinuxcnc.a \
-	../lib/libnml.so.0 \
-	../lib/liblinuxcncini.so.0 \
-	../lib/librtapi_math.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc.a \
+	$(SHAREDOBJ_PATH)/libnml.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
+	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
 	$(SOFTWARE_ROOT)/custom/lib/Log.so
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CXX) $(LDFLAGS) -o $@ $^ $(XLIBS)
@@ -134,13 +135,13 @@ endif
 #BOOST_SYSTEM_LIB = 
 ifeq "$(BUILD_EMCWEB)" "yes"
 ../bin/emcweb: $(call TOOBJS, $(EMCWEBSRCS)) \
-	../lib/liblinuxcnc.a \
-	../lib/libnml.so.0 \
-	../lib/liblinuxcncini.so.0 \
-	../lib/librtapi_math.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc.a \
+	$(SHAREDOBJ_PATH)/libnml.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
+	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
 	$(SOFTWARE_ROOT)/custom/lib/Log.so
 	$(ECHO) Linking $(notdir $@)
-	$(Q)$(CXX) $(LDFLAGS) $(BOOST_LDFLAGS) -o $@ $(ULFLAGS) $^ \
+	$(Q)$(CXX) $(LDFLAGS) $(BOOST_LDFLAGS) -Wl,-M,-Map,$@.map,--cref -o $@ $(ULFLAGS) $^ \
 	    $(BOOST_SERIALIZATION_LIB) $(BOOST_THREAD_LIB) $(BOOST_SYSTEM_LIB) \
 	    -lpthread -ldl	
 TARGETS += ../bin/emcweb

@@ -170,6 +170,9 @@ size_t rtapi_heap_status(struct rtapi_heap *h, struct rtapi_heap_stat *hs)
     hs->total_avail = 0;
     hs->fragments = 0;
     hs->largest = 0;
+#if !defined(RTAPI)
+    printf("rtapi_heap_status called\n");
+#endif
 
     rtapi_malloc_hdr_t *p, *prevp, *freep = heap_ptr(h, h->free_p);
     prevp = freep;

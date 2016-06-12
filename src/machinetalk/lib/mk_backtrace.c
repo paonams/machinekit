@@ -2,6 +2,8 @@
 
 #include "config.h"
 
+#define HAVE_LIBBACKTRACE
+#define BACKTRACE_SUPPORTED
 #if defined(HAVE_LIBBACKTRACE)
 
 // custom libbacktrace install
@@ -19,7 +21,16 @@
 #if defined(BACKTRACE_SUPPORTED)
 
 #include <string.h>
+#include <stdint.h>
+#include <execinfo.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/syscall.h>
 
+#define MLAB_CHANGES
+
+#if !defined(MLAB_CHANGES)
 struct bt_ctx {
     struct backtrace_state *state;
     int error;
@@ -80,17 +91,90 @@ void backtrace_init(const char *name)
     state = backtrace_create_state (name, BACKTRACE_SUPPORTS_THREADS,
 				    error_callback, NULL);
 }
+#endif
+#define BT_BUF_SIZE 1024
 
-void backtrace(const char *prefix, const char *header, btprint_t print, int skip)
+int setstacktracemap(char* pidname)
 {
+    char buff[64];
+    int ret;
+
+    sprintf(buff, "cat /proc/%d/maps > /etc/mlabs/log/%s.map", getpid(), pidname);
+
+    ret = system(buff);
+    return ret;
+}
+void custom_backtrace(const char *prefix, const char *header, btprint_t print, int skip)
+{
+    int nptrs;
+    void *buffer[BT_BUF_SIZE];
+    char **strings;
+    int j;
+    pid_t tid = (pid_t) syscall (SYS_gettid);
+
     if (prefix == NULL)
 	prefix = "";
+#if !defined(MLAB_CHANGES)
     struct bt_ctx ctx = {state, 0, print, prefix};
+#endif
+#if defined(MLAB_CHANGES)
+    nptrs = backtrace(buffer, BT_BUF_SIZE);
+    print(prefix, "backtrace() returned %d addresses\n", nptrs);
     if (header && strlen(header))
-	print(prefix,  " --- %s backtrace: ---", header);
+	print(prefix,  " --- %s backtrace start %d ---\n", header, tid);
+    for(j = 0; j < nptrs; ++j){
+	print(prefix, "0x%lx\n", buffer[j]);
+    }
+#if 0
+    strings = backtrace_symbols(buffer, nptrs);
+    if (strings == NULL){
+	print(prefix, "backtrace_symbols returns NULL");
+	return;
+    }
+    print(prefix, "backtrace symbols");
+    for(j = 0; j < nptrs; ++j){
+	print(prefix, "%s", strings[j]);
+    }
+    free(strings);
+#endif
+#else
     backtrace_simple(state, skip, simple_callback, error_callback, &ctx);
+#endif
     if (header && strlen(header))
-	print(prefix,  " --------------------", header);
+	print(prefix,  " --- %s backtrace end ---\n", header);
+}
+
+
+void custom_backtrace_1(const char *header, btprint1_t print)
+{
+    int nptrs;
+    void *buffer[BT_BUF_SIZE];
+    char **strings;
+    int j;
+    pid_t tid = (pid_t) syscall (SYS_gettid);
+
+
+    nptrs = backtrace(buffer, BT_BUF_SIZE);
+    print("backtrace() returned %d addresses\n", nptrs);
+    if (header && strlen(header))
+	print(" --- %s backtrace start %d ---\n", header, tid);
+    for(j = 0; j < nptrs; ++j){
+	print("0x%lx\n", buffer[j]);
+    }
+    if (header && strlen(header))
+	print(" --- %s backtrace end ---\n", header);
+#if 0
+    strings = backtrace_symbols(buffer, nptrs);
+    if (strings == NULL){
+	print("backtrace_symbols returns NULL\n");
+	return;
+    }
+    print("backtrace symbols\n");
+    for(j = 0; j < nptrs; ++j){
+	print("%s\n", strings[j]);
+    }
+    free(strings);
+#endif
 }
 
 #endif // BACKTRACE_SUPPORTED

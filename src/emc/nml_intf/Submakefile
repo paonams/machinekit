@@ -4,6 +4,7 @@ LIBEMCSRCS := \
     emc/nml_intf/emcglb.c \
     emc/rs274ngc/modal_state.cc \
     emc/nml_intf/emc.cc \
+    emc/nml_intf/intl.c \
     emc/nml_intf/emcpose.c \
     emc/nml_intf/emcargs.cc \
     emc/nml_intf/emcops.cc \
@@ -18,11 +19,11 @@ USERSRCS += $(LIBEMCSRCS)
 
 $(call TOOBJSDEPS, $(LIBEMCSRCS)) : EXTRAFLAGS=-fPIC
 
-TARGETS += ../lib/liblinuxcnc.a
+TARGETS += $(SHAREDOBJ_PATH)/liblinuxcnc.a
 
-../lib/liblinuxcnc.a: $(call TOOBJS,$(LIBEMCSRCS))
+$(SHAREDOBJ_PATH)/liblinuxcnc.a: $(call TOOBJS,$(LIBEMCSRCS))
 	$(ECHO) Linking $(notdir $@)
-	@mkdir -p ../lib
+	@mkdir -p $(SHAREDOBJ_PATH)
 	@rm -f $@
 	@$(AR) $(ARFLAGS) $@ $^
 

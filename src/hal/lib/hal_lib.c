@@ -129,7 +129,6 @@ int lib_mem_id = -1;	/* RTAPI shmem ID for library module */
     grabbed the hal_data mutex.
 */
 
-
 /***********************************************************************
 *                  PUBLIC (API) FUNCTION CODE                          *
 ************************************************************************/

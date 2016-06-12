@@ -11,16 +11,16 @@ $(call TOOBJSDEPS, $(LIBINISRCS)) : EXTRAFLAGS=-fPIC
 INIFILESRCS := libnml/inifile/inivar.cc
 
 USERSRCS += $(INIFILESRCS) $(LIBINISRCS)
-TARGETS += ../lib/liblinuxcncini.so ../lib/liblinuxcncini.so.0
+TARGETS += $(SHAREDOBJ_PATH)/liblinuxcncini.so $(SHAREDOBJ_PATH)/liblinuxcncini.so.0
 
-../lib/liblinuxcncini.so.0: $(call TOOBJS,$(LIBINISRCS))
+$(SHAREDOBJ_PATH)/liblinuxcncini.so.0: $(call TOOBJS,$(LIBINISRCS))
 	$(ECHO) Creating shared library $(notdir $@)
-	@mkdir -p ../lib
+	@mkdir -p $(SHAREDOBJ_PATH)
 	@rm -f $@
-	$(Q)$(CXX) $(LDFLAGS) -Wl,-soname,$(notdir $@) -shared -o $@ $^
+	$(Q)$(CXX) $(LDFLAGS) -Wl,-soname,$(notdir $@) -Wl,-M,-Map,$@.map,--cref -shared -o $@ $^
 
-../libexec/inivar: $(call TOOBJS, $(INIFILESRCS)) ../lib/liblinuxcncini.so.0
+../libexec/inivar: $(call TOOBJS, $(INIFILESRCS)) $(SHAREDOBJ_PATH)/liblinuxcncini.so.0
 	$(ECHO) Linking $(notdir $@)
 	@mkdir -p $(dir $@)
-	$(Q)$(CXX) $(LDFLAGS) -o $@ $^ 
+	$(Q)$(CXX) $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref  -o $@ $^ 
 TARGETS += ../libexec/inivar

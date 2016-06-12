@@ -66,6 +66,13 @@ using namespace std;
 
 #include <google/protobuf/text_format.h>
 #include <machinetalk/generated/message.pb.h>
+
+#ifdef ENABLE_LOG_FILE
+#include <Log.h>
+#include <LogClass.h>
+LogClass logObject;
+#endif
+
 using namespace google::protobuf;
 
 
@@ -444,6 +451,14 @@ static void btprint(const char *prefix, const char *fmt, ...)
     va_list args;
     va_start(args, fmt);
     vsyslog_async(LOG_ERR, fmt, args);
+
+    static char temp_buffer[400];
+    memset(temp_buffer, 400, 0);
+    vsnprintf(temp_buffer, sizeof(temp_buffer), fmt, args);
+    va_end(args);
+#ifdef ENABLE_LOG_FILE
+    LOG(temp_buffer);
+#endif
 }
 
 // handle signals delivered via sigaction - not all signals
@@ -455,8 +470,9 @@ static void sigaction_handler(int sig, siginfo_t *si, void *uctx)
     syslog_async(LOG_ERR,
 		 "msgd:%d: signal %d - '%s' received, dumping core (current dir=%s)",
 		 rtapi_instance, sig, strsignal(sig), get_current_dir_name());
-
-    backtrace("", "msgd", btprint, 3);
+    LOG("\nRTAPI_MSG "<<__FUNCTION__<<" signal "<<sig<<"\n");
+    setstacktracemap("rtapi_msgd");
+    custom_backtrace("", "msgd", btprint, 3);
 
     closelog_async(); // let syslog_async drain
     sleep(1);
@@ -694,7 +710,7 @@ static struct option long_options[] = {
 
     {0, 0, 0, 0}
 };
-
+#define RTAPI_MSGLOG "/etc/mlabs/log/rtapi_msgdLog"
 int main(int argc, char **argv)
 {
     int c, i, retval;
@@ -703,10 +719,17 @@ int main(int argc, char **argv)
     size_t argv0_len, procname_len, max_procname_len;
 
     inifile = getenv("MACHINEKIT_INI");
+#ifdef ENABLE_LOG_FILE
+    //std::string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/emctaskmainLog");
+    std::string file(RTAPI_MSGLOG);
+    logObject.initializeLog(file);
+#endif
 
     // Verify that the version of the library that we linked against is
     // compatible with the version of the headers we compiled against.
     GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+    setstacktracemap("rtapi_msgd");
 
     progname = argv[0];
     shm_common_init();
@@ -881,8 +904,9 @@ int main(int argc, char **argv)
     }
 
     snprintf(proctitle, sizeof(proctitle), "msgd:%d",rtapi_instance);
-    backtrace_init(proctitle);
+    //backtrace_init(proctitle);
     fprintf(stderr, "opening log proctitle %s\n", proctitle);
+    LOG("RTAPI_MSGD opening log proctitle "<<proctitle<<"\n");
     openlog_async(proctitle, option , SYSLOG_FACILITY);
     // max out async syslog buffers for slow system in debug mode
     tunelog_async(99,1000);

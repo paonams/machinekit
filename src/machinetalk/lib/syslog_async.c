@@ -32,6 +32,8 @@
 #include <paths.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <sys/time.h>
+#include <sys/syscall.h>
 
 #include "syslog_async.h"
 
@@ -306,6 +308,12 @@ void vsyslog_async(int priority, const char *format, va_list ap)
   time_t time_now;
   char *p, *q, *r;
   size_t len;
+  time_t msec;
+  struct timeval timeValue;
+  char buf[21];
+  time_t now;
+  struct tm tstruct;
+  pid_t tid;
 
   if (!(log_mask & LOG_MASK(LOG_PRI(priority))) || (priority &~ (LOG_PRIMASK|LOG_FACMASK)))
     return;
@@ -335,11 +343,24 @@ void vsyslog_async(int priority, const char *format, va_list ap)
       p += sprintf(p, "<%d>", priority | log_fac);
 
       q = p;
+#if 0
 
       if (log_opts & LOG_PID)
 	p += sprintf(p, "%.15s %s[%d]: ", ctime(&time_now) + 4, log_tag, getpid());
       else
 	p += sprintf(p, "%.15s %s: ", ctime(&time_now) + 4, log_tag);
+#endif
+      now = time(0);
+      tstruct = *localtime(&now);
+      strftime(buf, sizeof(buf), "%d-%m-%Y %X:", &tstruct);
+      tid = (pid_t) syscall (SYS_gettid);
+      msec = 0;
+      if (gettimeofday(&timeValue, NULL) == 0)
+	  msec = timeValue.tv_usec / 1000;
+      //if (log_opts & LOG_PID)
+	  p += sprintf(p, "%s%ld %s[%d]: ", buf, msec, log_tag, tid);
+      //else
+	//  p += sprintf(p, "%.15s:%ld %s: ", ctime(&time_now) + 4, msec, log_tag);
 
       len = p - entry->payload;
       len += vsnprintf(p, MAX_MESSAGE - len, format, ap) + 1; /* include zero-terminator */

@@ -40,7 +40,7 @@ modclean-rtapi:
 	for flav in $(BUILD_THREAD_FLAVORS); do \
 	    rm -f rtapi/$$flav; \
 	    rm -f rtapi/.flavor-$$flav-link-create-stamp; \
-	    rm -f ../lib/ulapi-$$flav.so; \
+	    rm -f $(SHAREDOBJ_PATH)/ulapi-$$flav.so; \
 	    rm -f ../libexec/rtapi_app_$$flav; \
 	done
 .PHONY:  modclean-rtapi
@@ -85,17 +85,17 @@ CXXFLAGS += -I $(SOFTWARE_ROOT)/custom/lib -DENABLE_LOG_FILE
 $(call TOOBJSDEPS, $(ULAPI_SRCS)): EXTRAFLAGS += \
 	$(THREADS_RTFLAGS) -fPIC
 
-ULAPISO := ../rtlib/ulapi-$(threads).so
+ULAPISO := $(SHAREDOBJ_PATH)/rtlib/ulapi-$(threads).so
 
-$(ULAPISO): ../lib/liblinuxcnchal.so ../lib/liblinuxcncshm.so \
+$(ULAPISO): $(SHAREDOBJ_PATH)/liblinuxcnchal.so $(SHAREDOBJ_PATH)/liblinuxcncshm.so \
 		$(call TOOBJS, $(ULAPI_SRCS))
 	$(ECHO) Creating shared object $@
-	@mkdir -p ../rtlib
+	@mkdir -p $(SHAREDOBJ_PATH)/rtlib
 	@rm -f $@
-	$(Q)$(CC) $(LDFLAGS)  -Wl,-soname,$(notdir $@) -shared \
+	$(Q)$(CC) $(LDFLAGS)  -Wl,-soname,$(notdir $@) -Wl,-M,-Map,$@.map,--cref -shared \
 	    -o $@ $^ $(ULAPISO_LIBS) $(RT_LDFLAGS) \
-	../lib/liblinuxcncshm.so \
-	../lib/liblinuxcnchal.so
+	$(SHAREDOBJ_PATH)/liblinuxcncshm.so \
+	$(SHAREDOBJ_PATH)/liblinuxcnchal.so
 
 # Plumb in the ulapi-<flavor>.so build during 2nd-level recursive make
 # modules run
@@ -118,18 +118,18 @@ ULAPI_AUTOLOAD_SRCS := \
 
 USERSRCS += $(ULAPI_AUTOLOAD_SRCS)
 
-ULAPI_AUTOLOAD_LIB := ../lib/liblinuxcnculapi.so
+ULAPI_AUTOLOAD_LIB := $(SHAREDOBJ_PATH)/liblinuxcnculapi.so
 
 $(call TOOBJSDEPS, $(ULAPI_AUTOLOAD_SRCS)): EXTRAFLAGS += -DULAPI -fPIC
 
 $(ULAPI_AUTOLOAD_LIB).0: $(call TOOBJS, $(ULAPI_AUTOLOAD_SRCS)) \
-	../lib/liblinuxcncini.so \
-	../lib/liblinuxcncshm.so
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so \
+	$(SHAREDOBJ_PATH)/liblinuxcncshm.so
 	$(ECHO) Creating shared library $(notdir $@)
-	@mkdir -p ../lib
+	@mkdir -p $(SHAREDOBJ_PATH)
 	@rm -f $@
 	$(Q)$(CC) $(LDFLAGS) -Wl,-rpath,$(EMC2_RTLIB_DIR) \
-	    -Wl,-soname,$(notdir $@) -shared \
+	    -Wl,-soname,$(notdir $@) -Wl,-M,-Map,$@.map,--cref -shared \
 	    -o $@ $^ -ldl $(RT_LDFLAGS)
 
 TARGETS += $(ULAPI_AUTOLOAD_LIB) $(ULAPI_AUTOLOAD_LIB).0
@@ -166,15 +166,15 @@ $(call TOOBJSDEPS, rtapi/$(threads)/rtapi_app.cc): EXTRAFLAGS = \
 
 ../libexec/rtapi_app_$(threads): \
 	$(call TOOBJS, $(RTAPI_APP_SRCS)) \
-	../lib/liblinuxcncini.so.0 \
-	../lib/liblinuxcncshm.so \
-	../lib/libmtalk.so.0 \
-	../lib/liblinuxcnc-pb2++.so.0 \
-	../lib/librtapi_math.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcncshm.so \
+	$(SHAREDOBJ_PATH)/libmtalk.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
+	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
 	$(SOFTWARE_ROOT)/custom/lib/Log.so
 	$(ECHO) ../libexec/rtapi_app_ Linking $(notdir $@)
 	@mkdir -p $(dir $@)
-	$(Q)$(CXX) -Wl,--no-as-needed -Wl,-rpath,$(EMC2_RTLIB_DIR) $(RTAPI_APP_RPATH) \
+	$(Q)$(CXX) -Wl,--no-as-needed -Wl,-rpath,$(EMC2_RTLIB_DIR) $(RTAPI_APP_RPATH) -Wl,-M,-Map,$@.map,--cref \
 	    -o $@ $^ $(RT_LDFLAGS) \
 	$(PROTOBUF_LIBS) $(CZMQ_LIBS) $(AVAHI_LIBS) $(LTTNG_UST_LIBS) -lstdc++ -ldl -luuid
 
@@ -254,7 +254,7 @@ $(call TOOBJSDEPS, $(RTAPI_KDETECT_SRCS)): \
 	EXTRAFLAGS += -DTEST
 
 # Build target
-../libexec/kdetect: $(RTAPI_KDETECT_OBJS)  ../lib/liblinuxcnchal.so
+../libexec/kdetect: $(RTAPI_KDETECT_OBJS)  $(SHAREDOBJ_PATH)/liblinuxcnchal.so $(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 
 	$(ECHO) ../libexec/kdetect Linking $(notdir $@)
 	@mkdir -p $(dir $@)
 	$(Q)$(CC)  $(LDFLAGS) -o $@ $^ -lrt -ldl
@@ -285,13 +285,14 @@ $(call TOOBJSDEPS, $(RTAPI_MSGD_SRCS)): \
 	EXTRAFLAGS +=  $(RTAPI_MSGD_CFLAGS)
 
 ../libexec/rtapi_msgd: $(RTAPI_MSGD_OBJS) \
-	../lib/liblinuxcncshm.so \
-	../lib/liblinuxcncini.so \
-	../lib/libmtalk.so.0 \
-	../lib/liblinuxcnc-pb2++.so
+	$(SHAREDOBJ_PATH)/liblinuxcncshm.so \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so \
+	$(SHAREDOBJ_PATH)/libmtalk.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so\
+	$(SOFTWARE_ROOT)/custom/lib/Log.so
 	$(ECHO) ../libexec/rtapi_msgd Linking $(notdir $@)
 	@mkdir -p $(dir $@)
-	$(Q)$(CC)  $(LDFLAGS) -o $@ $^ $(RTAPI_MSGD_LDFLAGS) -lrt
+	$(Q)$(CC)  $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref -o $@ $^ $(RTAPI_MSGD_LDFLAGS) -lrt
 
 USERSRCS += $(RTAPI_MSGD_SRCS)
 TARGETS += ../libexec/rtapi_msgd
@@ -300,7 +301,7 @@ TARGETS += ../libexec/rtapi_msgd
 FLAVOR_SRCS =  rtapi/flavor.c rtapi/rtapi_compat.c
 
 ../libexec/flavor: $(call TOOBJS, $(FLAVOR_SRCS)) \
-		../lib/liblinuxcncshm.so ../lib/liblinuxcncini.so
+		$(SHAREDOBJ_PATH)/liblinuxcncshm.so $(SHAREDOBJ_PATH)/liblinuxcncini.so
 	$(ECHO) ../libexec/flavor Linking $(notdir $@)
 	@mkdir -p $(dir $@)
 	$(Q)$(CC)  $(LDFLAGS) -o $@ $^ -lrt

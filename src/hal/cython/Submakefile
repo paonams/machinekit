@@ -3,10 +3,10 @@
 HALNGDIR := hal/cython
 HALNGMKDIR :=  $(HALNGDIR)/machinekit
 
-PYTARGETS += ../lib/python/machinekit/__init__.py
+PYTARGETS += $(SHAREDOBJ_PATH)/python/machinekit/__init__.py
 
-../lib/python/machinekit/__init__.py:
-	@mkdir -p ../lib/python/machinekit
+$(SHAREDOBJ_PATH)/python/machinekit/__init__.py:
+	@mkdir -p $(SHAREDOBJ_PATH)/python/machinekit
 	@touch $@
 
 INCLUDES += $(HALNGDIR)
@@ -23,9 +23,9 @@ $(call TOOBJSDEPS, $(HALSO_CXXSRCS)) : EXTRAFLAGS=-fPIC -Ihal/utils -I.
 # shotgun approach to dependencies: will alwas hit the target (and more).
 $(HALNGMKDIR)/hal.c: $(wildcard $(HALNGMKDIR)/*.pyx $(HALNGMKDIR)/*.pxd)
 
-TARGETS += ../lib/python/machinekit/hal.so
-../lib/python/machinekit/hal.so:	../lib/liblinuxcnchal.so.0 \
-	../lib/libmtalk.so.0 \
+TARGETS += $(SHAREDOBJ_PATH)/python/machinekit/hal.so
+$(SHAREDOBJ_PATH)/python/machinekit/hal.so:	$(SHAREDOBJ_PATH)/liblinuxcnchal.so.0 \
+	$(SHAREDOBJ_PATH)/libmtalk.so.0 \
 	 $(patsubst %.c,objects/%.o,$(HALSO_SRCS)) \
 	 $(patsubst %.cc,objects/%.o,$(HALSO_CXXSRCS))
 	$(ECHO) Linking $($@)
@@ -45,14 +45,14 @@ USERSRCS += $(RTAPISO_CSRCS) $(RTAPISO_CXXSRCS)
 $(call TOOBJSDEPS, $(RTAPISO_CSRCS)) : EXTRAFLAGS=-fPIC -Ihal/utils -I.
 $(call TOOBJSDEPS, $(RTAPISO_CXXSRCS)) : EXTRAFLAGS=-fPIC -Ihal/utils -I.
 
-TARGETS += ../lib/python/machinekit/rtapi.so
+TARGETS += $(SHAREDOBJ_PATH)/python/machinekit/rtapi.so
 
-../lib/python/machinekit/rtapi.so: \
+$(SHAREDOBJ_PATH)/python/machinekit/rtapi.so: \
 	 $(patsubst %.c,objects/%.o,$(RTAPISO_CSRCS)) \
 	 $(patsubst %.cc,objects/%.o,$(RTAPISO_CXXSRCS)) \
-	../lib/liblinuxcnchal.so.0 \
-	../lib/liblinuxcnc-pb2++.so.0 \
-	../lib/libmtalk.so.0
+	$(SHAREDOBJ_PATH)/liblinuxcnchal.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
+	$(SHAREDOBJ_PATH)/libmtalk.so.0
 	$(ECHO) Linking $($@)
 	@mkdir -p $(dir $@)
 	$(CC) -g $(LDFLAGS) -shared -o $@ $^
@@ -65,10 +65,10 @@ $(COMPATSO_CSRCS): $(wildcard $(HALNGMKDIR)/*.pyx $(HALNGMKDIR)/*.pxd)
 
 USERSRCS += $(COMPATSO_CSRCS)
 $(call TOOBJSDEPS, $(COMPATSO_CSRCS)) : EXTRAFLAGS=-fPIC
-TARGETS += ../lib/python/machinekit/compat.so
-../lib/python/machinekit/compat.so: \
+TARGETS += $(SHAREDOBJ_PATH)/python/machinekit/compat.so
+$(SHAREDOBJ_PATH)/python/machinekit/compat.so: \
 	 $(patsubst %.c,objects/%.o,$(COMPATSO_CSRCS)) \
-	../lib/liblinuxcnchal.so.0
+	$(SHAREDOBJ_PATH)/liblinuxcnchal.so.0
 	$(ECHO) Linking $($@)
 	@mkdir -p $(dir $@)
 	$(CC) -g $(LDFLAGS) -shared -o $@ $^
@@ -80,8 +80,8 @@ SHMCOMMONSO_CSRCS := $(addprefix $(HALNGMKDIR)/, \
 
 USERSRCS += $(SHMCOMMONSO_CSRCS)
 $(call TOOBJSDEPS, $(SHMCOMMONSO_CSRCS)) : EXTRAFLAGS=-fPIC -Irtapi/shmdrv
-TARGETS += ../lib/python/machinekit/shmcommon.so
-../lib/python/machinekit/shmcommon.so: \
+TARGETS += $(SHAREDOBJ_PATH)/python/machinekit/shmcommon.so
+$(SHAREDOBJ_PATH)/python/machinekit/shmcommon.so: \
 	 $(patsubst %.c,objects/%.o,$(SHMCOMMONSO_CSRCS))
 	$(ECHO) Linking $($@)
 	@mkdir -p $(dir $@)

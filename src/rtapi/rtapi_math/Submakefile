@@ -94,12 +94,12 @@ ccflags-extra := -D_IEEE_LIBM \
 	-Werror
 
 $(call TOOBJSDEPS, $(LIBRMSRCS)) : EXTRAFLAGS=-fPIC $(ccflags-extra)
-LIBRM := ../lib/librtapi_math.so
+LIBRM := $(SHAREDOBJ_PATH)/librtapi_math.so
 
 $(LIBRM).0: $(call TOOBJS,$(LIBRMSRCS))
 	$(ECHO) Creating shared library $(notdir $@)
-	@mkdir -p ../lib
+	@mkdir -p $(SHAREDOBJ_PATH)
 	@rm -f $@
-	$(Q)$(CXX) $(LDFLAGS) -Wl,-soname,$(notdir $@) -shared -o $@ $^
+	$(Q)$(CXX) $(LDFLAGS) -Wl,-soname,$(notdir $@) -Wl,-M,-Map,$@.map,--cref -shared -o $@ $^
 USERSRCS += $(LIBRMSRCS)
 TARGETS += $(LIBRM) $(LIBRM).0

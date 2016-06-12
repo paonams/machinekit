@@ -83,6 +83,8 @@ fpu_control_t __fpu_control = _FPU_IEEE & ~(_FPU_MASK_IM | _FPU_MASK_ZM | _FPU_M
 #include "motion.h"             // EMCMOT_ORIENT_*
 #include "inihal.hh"
 
+#include <mk-backtrace.h>
+
 #ifdef ENABLE_LOG_FILE
 #include <Log.h>
 #include <LogClass.h>
@@ -140,7 +142,7 @@ NMLmsg *emcTaskCommand = 0;
 // signal handling code to stop main loop
 int done;
 static int emctask_shutdown(void);
-extern void backtrace(int signo);
+extern void custom_backtrace(int signo);
 int _task = 1; // control preview behaviour when remapping
 
 // for operator display on iocontrol signalling a toolchanger fault if io.fault is set
@@ -3210,6 +3212,21 @@ static int iniLoad(const char *filename)
 
     return 0;
 }
+
+static void sigaction_handler(int sig)
+{
+    rcs_print("sigaction_handler signo %d\n", sig);
+    switch(sig){
+	case SIGSEGV:
+	case SIGTERM:
+	    custom_backtrace_1("emctask", rcs_print);
+	    break;
+	default:
+	    custom_backtrace_1("emctask", rcs_print);
+	    break;
+    }
+}
+
 #define TASKMAINLOG "/etc/mlabs/log/emctaskmainLog"
 /*
 syntax: a.out {-d -ini <inifile>} {-nml <nmlfile>} {-shm <key>}
@@ -3249,7 +3266,8 @@ int main(int argc, char *argv[])
     sigaction(SIGTERM, &newsig, NULL);
 
     // create a backtrace on stderr
-    newsig.sa_handler = backtrace;
+    //newsig.sa_handler = backtrace;
+    newsig.sa_handler = sigaction_handler;
     sigaction(SIGSEGV, &newsig, NULL);
     sigaction(SIGFPE, &newsig, NULL);
     sigaction(SIGUSR1, &newsig, NULL);

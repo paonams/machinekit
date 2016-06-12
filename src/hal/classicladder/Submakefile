@@ -44,7 +44,7 @@ $(call TOOBJS, $(CLASSICLADDERSRCS)): Makefile.inc
 
 USERSRCS += $(CLASSICLADDERSRCS)
 
-../bin/classicladder: $(call TOOBJS, $(CLASSICLADDERSRCS)) ../lib/liblinuxcnchal.so.0
+../bin/classicladder: $(call TOOBJS, $(CLASSICLADDERSRCS)) $(SHAREDOBJ_PATH)/liblinuxcnchal.so.0
 	$(ECHO) Linking $(notdir $@)
 	@$(CC) $(LDFLAGS) $(CFLAGS) $(ULFLAGS) -o $@ $^ $(GTK_LIBS) -lpthread
 

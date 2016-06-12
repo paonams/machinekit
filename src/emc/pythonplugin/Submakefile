@@ -13,13 +13,13 @@ USERSRCS += $(TESTSRCS)
 $(call TOOBJSDEPS, $(LIBPPSRCS)) : EXTRAFLAGS=-fPIC $(BOOST_DEBUG_FLAGS) 
 
 
-TARGETS += ../lib/libpyplugin.so.0 
+TARGETS += $(SHAREDOBJ_PATH)/libpyplugin.so.0 
 
-../lib/libpyplugin.so.0: $(patsubst %.cc,objects/%.o,$(LIBPPSRCS)) ../lib/liblinuxcncini.so
+$(SHAREDOBJ_PATH)/libpyplugin.so.0: $(patsubst %.cc,objects/%.o,$(LIBPPSRCS)) $(SHAREDOBJ_PATH)/liblinuxcncini.so
 	$(ECHO) Linking $(notdir $@)
-	@mkdir -p ../lib
+	@mkdir -p $(SHAREDOBJ_PATH)
 	@rm -f $@
-	$(Q)$(CXX) -g $(LDFLAGS) -Wl,-soname,$(notdir $@) -shared -o $@ $^ \
+	$(Q)$(CXX) -g $(LDFLAGS) -Wl,-soname,$(notdir $@) -Wl,-M,-Map,$@.map,--cref -shared -o $@ $^ \
 	    -lstdc++ $(BOOST_PYTHON_LIBS) -l$(LIBPYTHON)
 
 

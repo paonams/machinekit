@@ -23,14 +23,15 @@ endif
 CXXFLAGS += -I $(SOFTWARE_ROOT)/custom/lib -DENABLE_LOG_FILE
 
 ../bin/rs274: $(call TOOBJS, $(SAISRCS)) \
-	../lib/librs274.so.0 \
-	../lib/liblinuxcnc.a \
-	../lib/libnml.so.0 \
-	../lib/liblinuxcnchal.so.0 \
-	../lib/liblinuxcncini.so.0 \
-	../lib/libpyplugin.so.0 \
-	../lib/librtapi_math.so.0 \
+	$(SHAREDOBJ_PATH)/librs274.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc.a \
+	$(SHAREDOBJ_PATH)/libnml.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnchal.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
+	$(SHAREDOBJ_PATH)/libpyplugin.so.0 \
+	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
 	$(SOFTWARE_ROOT)/custom/lib/Log.so
 	$(ECHO) Linking $(notdir $@)
-	$(Q)$(CXX) $(LDFLAGS) $(PROFILE_LDFLAGS) \
+	$(Q)$(CXX) $(LDFLAGS) $(PROFILE_LDFLAGS) -Wl,-M,-Map,$@.map,--cref \
 	-o $@ $^ $(ULFLAGS) $(BOOST_PYTHON_LIBS) -l$(LIBPYTHON) $(LIBREADLINE) $(LIBFLAGS)

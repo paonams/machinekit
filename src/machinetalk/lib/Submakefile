@@ -50,15 +50,15 @@ $(call TOOBJSDEPS, $(LIBMTALK_SRCS)) : EXTRAFLAGS=-fPIC -g -O3 \
 	$(SYSLOGASYNC_CFLAGS) \
 	$(PB2JSONLIB_CXXFLAGS)
 
-TARGETS += ../lib/libmtalk.so ../lib/libmtalk.so.0
+TARGETS += $(SHAREDOBJ_PATH)/libmtalk.so $(SHAREDOBJ_PATH)/libmtalk.so.0
 
-../lib/libmtalk.so.0: $(call TOOBJS, $(LIBMTALK_SRCS)) \
-	../lib/liblinuxcnc-pb2++.so \
-	../lib/liblinuxcncini.so.0
+$(SHAREDOBJ_PATH)/libmtalk.so.0: $(call TOOBJS, $(LIBMTALK_SRCS)) \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0
 	$(ECHO) Linking $(notdir $@)
-	@mkdir -p ../lib
+	@mkdir -p $(SHAREDOBJ_PATH)
 	@rm -f $@
-	$(Q)$(CXX) -g  -Wl,-soname,$(notdir $@) -shared -o $@ $^ \
+	$(Q)$(CXX) -g  -Wl,-soname,$(notdir $@) -Wl,-M,-Map,$@.map,--cref -shared -o $@ $^ \
 	$(AVAHI_LIBS) $(CZMQ_LIBS) $(LIBMTALK_LDFLAGS) \
 	$(PB2JSONLIB_LDFLAGS)  $(LIBBACKTRACE)
 
@@ -76,11 +76,11 @@ ZRES_SRCS :=  $(addprefix $(LIBMTALK_DIR)/, \
 $(call TOOBJSDEPS, $(ZRES_SRCS)) : EXTRAFLAGS += -g -std=c++0x $(AVAHI_CFLAGS)
 
 ../bin/zres: $(call TOOBJS, $(ZRES_SRCS)) \
-	../lib/libmtalk.so.0 \
-	../lib/liblinuxcnc-pb2++.so \
-	../lib/liblinuxcncini.so.0
+	$(SHAREDOBJ_PATH)/libmtalk.so.0 \
+	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so \
+	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0
 	$(ECHO) Linking $(notdir $@)
-	$(Q)$(CC) -o $@ $^  $(AVAHI_LIBS) -lstdc++
+	$(Q)$(CC) -Wl,-M,-Map,$@.map,--cref -o $@ $^  $(AVAHI_LIBS) -lstdc++
 
 USERSRCS += $(ZRES_SRCS)
 TARGETS += ../bin/zres
