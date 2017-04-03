@@ -8,7 +8,7 @@ USERSRCS += $(EMCSVRSRCS)
 	$(SHAREDOBJ_PATH)/libnml.so.0 \
 	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
 	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
-	$(SOFTWARE_ROOT)/custom/lib/Log.so
+	$(SHAREDOBJ_PATH)/Log.so
 	$(ECHO) Linking $(notdir $@)
 	@$(CXX) $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref -o $@ $^ 
 TARGETS += ../bin/linuxcncsvr
@@ -31,12 +31,6 @@ MILLTASKSRCS := \
 	$(ULAPISRCS)
 USERSRCS += $(MILLTASKSRCS)
 
-#LDFLAGS +=
-LIBFLAGS = 
-ifeq ($(MODE), target)
-#LIBFLAGS =  -L/home/sanjit/Documents/workArea/LINUXCNC/cross_compiler/buildroot-2015.11.1/output/host/usr/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib -lintl
-LIBFLAGS =  -L$(TARGET_LIBFLAGS) -lintl
-endif
 ../bin/milltask: $(call TOOBJS, $(MILLTASKSRCS)) \
 	$(SHAREDOBJ_PATH)/librs274.so.0 \
 	$(SHAREDOBJ_PATH)/liblinuxcnc.a \
@@ -48,7 +42,7 @@ endif
 	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
 	$(SHAREDOBJ_PATH)/libmtalk.so.0 \
 	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
-	$(SOFTWARE_ROOT)/custom/lib/Log.so
+	$(SHAREDOBJ_PATH)/Log.so
 	$(ECHO) Linking $(notdir $@)
-	$(Q)$(CXX) -Wl,-M,-Map,$@.map,--cref -o $@ $^ $(LDFLAGS) $(BOOST_PYTHON_LIBS) -l$(LIBPYTHON) $(LIBFLAGS)
+	$(Q)$(CXX) -Wl,-M,-Map,$@.map,--cref -o $@ $^ $(LDFLAGS) $(BOOST_PYTHON_LIBS) -l$(LIBPYTHON) 
 TARGETS += ../bin/milltask

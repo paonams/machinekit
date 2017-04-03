@@ -53,10 +53,9 @@ SHMDRV_SRCS = rtapi/shmdrv/shmdrv.c \
 objects/.shmdrv-built: $(SHMDRV_SRCS)
 	for kdir in $(SHMDRV_KERNEL_DIRS); do \
 	    kver=`../scripts/kernel-vers.sh $$kdir`; \
-	    echo "kver $kdir"\
 	    mkdir -p objects/userland/$$kver; \
 	    cp $(SHMDRV_SRCS) objects/userland/$$kver; \
-	    echo "Building userland shmdrv module for kernel version $$kver"; \
+	    echo "Building userland shmdrv module for kernel version $kver"; \
 	    $(MAKE) \
 		-C $$kdir \
 		M=$(BASEPWD)/objects/userland/$$kver \

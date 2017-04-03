@@ -8,7 +8,7 @@ USERSRCS += $(IOSRCS) $(IOV2SRCS)
 	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
 	$(SHAREDOBJ_PATH)/librtapi_math.so.0\
 	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
-	$(SOFTWARE_ROOT)/custom/lib/Log.so
+	$(SHAREDOBJ_PATH)/Log.so
 	$(ECHO) Linking $(notdir $@)
 	@$(CXX) $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref -o $@ $^ 
 
@@ -18,7 +18,7 @@ USERSRCS += $(IOSRCS) $(IOV2SRCS)
 	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
 	$(SHAREDOBJ_PATH)/librtapi_math.so.0\
 	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
-	$(SOFTWARE_ROOT)/custom/lib/Log.so
+	$(SHAREDOBJ_PATH)/Log.so
 	$(ECHO) Linking $(notdir $@)
 	@$(CXX) $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref -o $@ $^
 

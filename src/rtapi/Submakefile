@@ -171,7 +171,7 @@ $(call TOOBJSDEPS, rtapi/$(threads)/rtapi_app.cc): EXTRAFLAGS = \
 	$(SHAREDOBJ_PATH)/libmtalk.so.0 \
 	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
 	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
-	$(SOFTWARE_ROOT)/custom/lib/Log.so
+	$(SHAREDOBJ_PATH)/Log.so
 	$(ECHO) ../libexec/rtapi_app_ Linking $(notdir $@)
 	@mkdir -p $(dir $@)
 	$(Q)$(CXX) -Wl,--no-as-needed -Wl,-rpath,$(EMC2_RTLIB_DIR) $(RTAPI_APP_RPATH) -Wl,-M,-Map,$@.map,--cref \
@@ -289,7 +289,7 @@ $(call TOOBJSDEPS, $(RTAPI_MSGD_SRCS)): \
 	$(SHAREDOBJ_PATH)/liblinuxcncini.so \
 	$(SHAREDOBJ_PATH)/libmtalk.so.0 \
 	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so\
-	$(SOFTWARE_ROOT)/custom/lib/Log.so
+	$(SHAREDOBJ_PATH)/Log.so
 	$(ECHO) ../libexec/rtapi_msgd Linking $(notdir $@)
 	@mkdir -p $(dir $@)
 	$(Q)$(CC)  $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref -o $@ $^ $(RTAPI_MSGD_LDFLAGS) -lrt

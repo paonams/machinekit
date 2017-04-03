@@ -64,7 +64,7 @@ endif
 	$(SHAREDOBJ_PATH)/libnml.so.0 \
 	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
 	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
-	$(SOFTWARE_ROOT)/custom/lib/Log.so
+	$(SHAREDOBJ_PATH)/Log.so
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CXX) $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref -o $@ $^ -lpthread
 TARGETS += ../bin/linuxcncrsh
@@ -74,7 +74,7 @@ TARGETS += ../bin/linuxcncrsh
 	$(SHAREDOBJ_PATH)/libnml.so.0 \
 	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
 	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
-	$(SOFTWARE_ROOT)/custom/lib/Log.so
+	$(SHAREDOBJ_PATH)/Log.so
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CXX) $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref -o $@ $^ -lpthread
 TARGETS += ../bin/schedrmt
@@ -84,7 +84,7 @@ TARGETS += ../bin/schedrmt
 	$(SHAREDOBJ_PATH)/libnml.so.0 \
 	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
 	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
-	$(SOFTWARE_ROOT)/custom/lib/Log.so
+	$(SHAREDOBJ_PATH)/Log.so
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CXX) $(LDFLAGS) -o $@ $^
 TARGETS += ../bin/linuxcnclcd
@@ -97,7 +97,7 @@ TARGETS += ../bin/linuxcnclcd
 	$(SHAREDOBJ_PATH)/liblinuxcnchal.so.0 \
 	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
 	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
-	$(SOFTWARE_ROOT)/custom/lib/Log.so
+	$(SHAREDOBJ_PATH)/Log.so
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CXX) $(LDFLAGS) -o $@ $^ 
 TARGETS += ../bin/halui
@@ -108,7 +108,7 @@ ifeq "$(HAVE_NCURSES)" "yes"
 	$(SHAREDOBJ_PATH)/libnml.so.0 \
 	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
 	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
-	$(SOFTWARE_ROOT)/custom/lib/Log.so
+	$(SHAREDOBJ_PATH)/Log.so
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CXX) $(LDFLAGS) -o $@ $^ $(KEYSTICKLIBS)
 TARGETS += ../bin/keystick
@@ -121,7 +121,7 @@ $(call TOOBJSDEPS,$(XEMCSRCS)): EXTRAFLAGS = $(CFLAGS_X)
 	$(SHAREDOBJ_PATH)/libnml.so.0 \
 	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
 	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
-	$(SOFTWARE_ROOT)/custom/lib/Log.so
+	$(SHAREDOBJ_PATH)/Log.so
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CXX) $(LDFLAGS) -o $@ $^ $(XLIBS)
 TARGETS += ../bin/xlinuxcnc
@@ -139,7 +139,7 @@ ifeq "$(BUILD_EMCWEB)" "yes"
 	$(SHAREDOBJ_PATH)/libnml.so.0 \
 	$(SHAREDOBJ_PATH)/liblinuxcncini.so.0 \
 	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
-	$(SOFTWARE_ROOT)/custom/lib/Log.so
+	$(SHAREDOBJ_PATH)/Log.so
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CXX) $(LDFLAGS) $(BOOST_LDFLAGS) -Wl,-M,-Map,$@.map,--cref -o $@ $(ULFLAGS) $^ \
 	    $(BOOST_SERIALIZATION_LIB) $(BOOST_THREAD_LIB) $(BOOST_SYSTEM_LIB) \
