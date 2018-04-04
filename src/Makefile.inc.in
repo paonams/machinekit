@@ -3,9 +3,6 @@
 # on @DATE@
 #
 
-# Define libexec dir first, since it contains tools needed to compute
-# following definitions
-EMC2_LIBEXEC_DIR=@EMC2_LIBEXEC_DIR@
 
 # Threads systems
 #################
@@ -60,10 +57,14 @@ BUILD_SYS = $($(THREADS)_THREADS_BUILD_SYS)
 #############
 
 prefix=@prefix@
-exec_prefix=@exec_prefix@
+exec_prefix=${prefix}
+
+# Define libexec dir first, since it contains tools needed to compute
+# following definitions
+EMC2_LIBEXEC_DIR=$(prefix)/libexec
 
 EMC2_HOME=@EMC2_HOME@
-LIB_DIR=@EMC2_HOME@/lib
+LIB_DIR=@EMC2_HOME@/sharedobj
 
 # flavor (and kver) subdirectories
 ifeq ($(BUILD_SYS),user-dso)
@@ -75,18 +76,20 @@ endif
 #used for install stuff
 #but have them here as reference
 #build system only uses EMC2_RTLIB_DIR when creating rtapi.ini
-EMC2_BIN_DIR=@EMC2_BIN_DIR@
-EMC2_TCL_DIR=@EMC2_TCL_DIR@
-EMC2_HELP_DIR=@EMC2_HELP_DIR@
-EMC2_RTLIB_BASE_DIR=@EMC2_RTLIB_DIR@
+
+EMC2_BIN_DIR=${EMC2_HOME}/bin
+EMC2_TCL_DIR=${EMC2_HOME}/tcl
+EMC2_HELP_DIR=${EMC2_HOME}/help
+EMC2_RTLIB_BASE_DIR=${EMC2_HOME}/sharedobj/rtlib
 EMC2_RTLIB_DIR=$(EMC2_RTLIB_BASE_DIR)/$(RTDIR_EXT)
-EMC2_USER_CONFIG_DIR=~/emc2/configs
-EMC2_SYSTEM_CONFIG_DIR=@EMC2_SYSTEM_CONFIG_DIR@
-EMC2_NCFILES_DIR=@EMC2_NCFILES_DIR@
-REALTIME=@REALTIME@
-EMC2_IMAGEDIR=@EMC2_IMAGE_DIR@
+EMC2_USER_CONFIG_DIR=${EMC2_HOME}/configs
+EMC2_SYSTEM_CONFIG_DIR=${prefix}/etc/linuxcnc
+EMC2_NCFILES_DIR=${EMC2_HOME}/nc_files
+REALTIME=${EMC2_HOME}/scripts/realtime
+EMC2_IMAGEDIR=${EMC2_HOME}/
 GIT_VERSION=@GIT_VERSION@
 GIT_CONFIG_SHA=@GIT_CONFIG_SHA@
+
 
 # Standard configure directories
 # do we really need these?
@@ -412,7 +415,7 @@ CONFIG_HAL_CAN=m
 BUILD_PYTHON=@BUILD_PYTHON@
 INCLUDEPY=@INCLUDEPY@
 LIBPYTHON=@LIBPYTHON@
-BOOST_PYTHON_LIBS=@BOOST_PYTHON_LIBS@
+BOOST_PYTHON_LIBS=-lboost_python
 PYTHON_CPPFLAGS=@PYTHON_CPPFLAGS@
 PYTHON_LIBS=@PYTHON_LIBS@
 SITEPY=@SITEPY@

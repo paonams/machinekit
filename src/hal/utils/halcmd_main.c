@@ -118,7 +118,7 @@ int main(int argc, char **argv)
     /* start parsing the command line, options first */
    fprintf(stderr,"halcmd main '%s'\n", inifile);
    ret = setstacktracemap("halcmd");
-   fprintf(stderr, "setstacktracemap ret %d", ret);
+   fprintf(stderr, "setstacktracemap ret %d\n", ret);
     while(1) {
         c = getopt(argc, argv, "+RCfi:kqQsvVhu:U:P");
         if(c == -1) break;
@@ -256,6 +256,7 @@ int main(int argc, char **argv)
             /* there is a following arg, and it's not an option */
             filename = argv[optind++];
             srcfile = fopen(filename, "r");
+	    printf("halcmd filename %s\n", filename);
             halcmd_set_filename(filename);
             if (srcfile == NULL) {
                 fprintf(stderr,
@@ -270,6 +271,7 @@ int main(int argc, char **argv)
             halcmd_set_filename("<stdin>");
             /* no filename followed -f option, use stdin */
             srcfile = stdin;
+	    printf("halcmd filename is stdin\n");
             prompt_mode = 1;
         }
     }

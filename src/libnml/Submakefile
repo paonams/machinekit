@@ -18,14 +18,13 @@ LIBNMLSRCS := $(addprefix libnml/, \
 
 $(call TOOBJSDEPS, $(LIBNMLSRCS)) : EXTRAFLAGS=-fPIC
 
-CXXFLAGS += -I $(SOFTWARE_ROOT)/custom/lib -DENABLE_LOG_FILE
+#CXXFLAGS += -I $(SOFTWARE_ROOT)/custom/lib -DENAB
 
 USERSRCS += $(LIBNMLSRCS)
 
 TARGETS += $(SHAREDOBJ_PATH)/libnml.so $(SHAREDOBJ_PATH)/libnml.so.0
 
-$(SHAREDOBJ_PATH)/libnml.so.0: $(call TOOBJS,$(LIBNMLSRCS)) $(SHAREDOBJ_PATH)/librtapi_math.so.0 \
-	$(SHAREDOBJ_PATH)/Log.so
+$(SHAREDOBJ_PATH)/libnml.so.0: $(call TOOBJS,$(LIBNMLSRCS)) $(SHAREDOBJ_PATH)/librtapi_math.so.0 
 	$(ECHO) Creating shared library $(notdir $@)
 	@mkdir -p $(SHAREDOBJ_PATH)
 	@rm -f $@

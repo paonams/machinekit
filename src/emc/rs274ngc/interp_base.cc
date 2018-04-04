@@ -24,7 +24,7 @@
 InterpBase::~InterpBase() {}
 
 InterpBase *interp_from_shlib(const char *shlib) {
-    fprintf(stderr, "interp_from_shlib(%s)\n", shlib);
+    fprintf(stderr, "interp_from_shlib opening sharedlib (%s)\n", shlib);
     dlopen(NULL, RTLD_GLOBAL);
     void *interp_lib = dlopen(shlib, RTLD_NOW);
     if(!interp_lib) {
@@ -32,6 +32,7 @@ InterpBase *interp_from_shlib(const char *shlib) {
 	char relative_interp[PATH_MAX];
 	snprintf(relative_interp, sizeof(relative_interp), "%s/%s",
 	    EMC2_HOME "/lib/emc2", shlib);
+	fprintf(stderr, "emcTaskInit: interp_from_shlib opening relative_lib '%s'\n", relative_interp);
 	interp_lib = dlopen(relative_interp, RTLD_NOW);
     }
     if(!interp_lib) {

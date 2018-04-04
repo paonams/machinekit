@@ -278,8 +278,9 @@ pid_t hal_systemv_nowait(char *const argv[]) {
     if ( pid == 0 ) {
 	/* child process */
 	/* print debugging info if "very verbose" (-V) */
+	    rtapi_print_msg(RTAPI_MSG_INFO, "hal_systemv_nowait ");
         for(n=0; argv[n] != NULL; n++) {
-	    rtapi_print_msg(RTAPI_MSG_DBG, "%s ", argv[n] );
+	    rtapi_print_msg(RTAPI_MSG_INFO, "%s ", argv[n] );
 	}
         if (n == 0) {
             halcmd_error("hal_systemv_nowait: empty argv array passed in\n");
@@ -924,6 +925,7 @@ int halcmd_preprocess_line ( char *line, char **tokens )
     }
     /* split cmd_buff into tokens */
     retval = tokenize(cmd_buf, tokens);
+    printf("halcmd_preprocess_line cmd_buf %s\n", cmd_buf);
     if (retval != 0) {
 	return -3;
     }

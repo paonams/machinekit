@@ -1668,6 +1668,7 @@ int do_loadusr_cmd(char *args[])
     }
     /* prepare to exec() the program */
     argv[0] = prog_name;
+    printf("do_loadusr_cmd %s\n", prog_name);
     /* loop thru remaining arguments */
     n = 0;
     m = 1;

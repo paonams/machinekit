@@ -716,7 +716,7 @@ static struct miscdevice shm_misc_dev = {
 };
 
 static ssize_t sys_status(struct device* dev, struct device_attribute* attr, 
-			  char* buf, size_t count)
+			  char* buf/*, size_t count*/)
 {
     int i;
     size_t size, written, left = PAGE_SIZE - 80; // leave some space for "..." line

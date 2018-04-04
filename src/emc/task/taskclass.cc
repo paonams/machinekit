@@ -307,6 +307,12 @@ int emcTaskOnce(const char *filename)
     // NB: the interpreter.this global will appear only after Interp.init()
 
     extern struct _inittab builtin_modules[];
+    int i;
+    i = 0;
+    while(builtin_modules[i].name != NULL){
+	rcs_print("emcTaskOnce: %d) %s\n", i, builtin_modules[i].name);
+	++i;
+    }
     if (!PythonPlugin::instantiate(builtin_modules)) {
 	rcs_print("emcTaskOnce: cant instantiate Python plugin\n");
 	goto no_pytask;
