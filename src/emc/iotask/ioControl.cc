@@ -664,6 +664,7 @@ int read_tool_inputs(void)
 }
 
 static void do_hal_exit(void) {
+    printf("%s comp_id %d\n", comp_id);
     hal_exit(comp_id);
 }
 
@@ -710,6 +711,7 @@ int main(int argc, char *argv[])
         }
         /* do other args similarly here */
     }
+    printf("src/emc/iotask/ioControl.cc main using emc_inifile %s\n", emc_inifile);
 
     /* Register the routine that catches the SIGINT signal */
     signal(SIGINT, quit);
@@ -758,10 +760,10 @@ int main(int argc, char *argv[])
         fms[0] = 0;
         ttcomments[0][0] = '\0';
     }
-
+    printf("%s loadingtoolTable %s\n", __FUNCTION__, tool_table_file);
     if (0 != loadToolTable(tool_table_file, emcioStatus.tool.toolTable,
                 fms, ttcomments, random_toolchanger)) {
-        rcs_print_error("can't load tool table.\n");
+        rcs_print_error("can't load tool table %s\n", tool_table_file);
     }
 
     done = 0;

@@ -94,7 +94,7 @@ void backtrace_init(const char *name)
 #endif
 #define BT_BUF_SIZE 1024
 
-int setstacktracemap(char* pidname)
+int setstacktracemap(const char* pidname)
 {
     char buff[64];
     int ret;
@@ -108,7 +108,7 @@ void custom_backtrace(const char *prefix, const char *header, btprint_t print, i
 {
     int nptrs;
     void *buffer[BT_BUF_SIZE];
-    char **strings;
+    //char **strings;
     int j;
     pid_t tid = (pid_t) syscall (SYS_gettid);
 
@@ -149,7 +149,7 @@ void custom_backtrace_1(const char *header, btprint1_t print)
 {
     int nptrs;
     void *buffer[BT_BUF_SIZE];
-    char **strings;
+    //char **strings;
     int j;
     pid_t tid = (pid_t) syscall (SYS_gettid);
 

@@ -74,7 +74,7 @@ extern char *logpath;
 *                   LOCAL FUNCTION DEFINITIONS                         *
 ************************************************************************/
 
-int setstacktracemap(char* pidname)
+int setstacktracemap(const char* pidname)
 {
     char buff[64];
     int ret;

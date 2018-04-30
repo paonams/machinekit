@@ -104,7 +104,8 @@ int pci_disable_device(struct pci_dev *dev);
           pci_resource_start((dev), (bar)) + 1))
 
 void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
-inline void iounmap(volatile void __iomem *addr);
+/*inline void iounmap(volatile void __iomem *addr);*/
+void iounmap(volatile void __iomem *addr);
 
 static inline const char *pci_name(const struct pci_dev *pdev)
 {

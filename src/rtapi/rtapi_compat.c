@@ -517,16 +517,19 @@ int get_elf_section(const char *const fname, const char *section_name, void **de
     struct stat st;
 
     if (stat(fname, &st) != 0) {
+	printf("%s stat fails as not found fname %s\n", __FUNCTION__, fname);
 	perror("stat");
 	return -1;
     }
     int fd = open(fname, O_RDONLY);
     if (fd < 0) {
+	printf("%s open fails for fname %s\n", __FUNCTION__, fname);
 	perror("open");
 	return fd;
     }
     char *p = mmap(0, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (p == NULL) {
+	printf("%s mmap fails for fname %s\n", __FUNCTION__, fname);
 	perror("mmap");
 	return -1;
     }
@@ -659,6 +662,7 @@ int rtapi_get_tags(const char *mod_name)
 	    perror("module_path");
 	    return -1;
 	}
+	printf("%s kernel_threads flavor modpath %s mod_name %s\n", __FUNCTION__, modpath, mod_name);
     } else {
 	if (get_rtapi_config(modpath,"RTLIB_DIR",PATH_MAX) != 0) {
 	    perror("cant get  RTLIB_DIR ?\n");
@@ -669,6 +673,7 @@ int rtapi_get_tags(const char *mod_name)
 	strcat(modpath,"/");
 	strcat(modpath,mod_name);
 	strcat(modpath, flavor->mod_ext);
+	printf("%s user_threads flavor modpath %s mod_name %s\n", __FUNCTION__, modpath, mod_name);
     }
     const char **caps = get_caps(modpath);
 

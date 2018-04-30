@@ -182,7 +182,8 @@ int rtapi_ping(int instance)
     command.set_type(pb::MT_RTAPI_APP_PING);
     cmd = command.mutable_rtapicmd();
     cmd->set_instance(instance);
-
+    fprintf(stdout, "rtapi_ping before rtapi_rpc instance %d\n", instance);
+    
     int retval = rtapi_rpc(z_command, command, reply);
     if (retval)
 	return retval;
@@ -278,9 +279,10 @@ int rtapi_connect(int instance, char *uri, const char *svc_uuid)
 	ll_zeroconf_resolve_free(p);
     }
 #endif
-
+    fprintf(stdout, "rtapi_connect before zctx_new\n");
     z_context = zctx_new ();
     assert(z_context);
+    fprintf(stdout, "rtapi_connect before zsocket_new\n");
     z_command = zsocket_new (z_context, ZMQ_DEALER);
     assert(z_command);
 
@@ -290,6 +292,7 @@ int rtapi_connect(int instance, char *uri, const char *svc_uuid)
     zsocket_set_identity(z_command, z_ident);
     zsocket_set_linger(z_command, 0);
 
+    fprintf(stdout, "rtapi_connect before zsocket_connect\n");
     if (zsocket_connect(z_command, uri)) {
 	perror("connect");
 	return -EINVAL;

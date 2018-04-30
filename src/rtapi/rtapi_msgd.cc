@@ -453,7 +453,7 @@ static void btprint(const char *prefix, const char *fmt, ...)
     vsyslog_async(LOG_ERR, fmt, args);
 
     static char temp_buffer[400];
-    memset(temp_buffer, 400, 0);
+    memset(temp_buffer, 0, 400);
     vsnprintf(temp_buffer, sizeof(temp_buffer), fmt, args);
     va_end(args);
 #ifdef ENABLE_LOG_FILE

@@ -110,6 +110,7 @@ int loadToolTable(const char *filename,
     // open tool table file
     if (NULL == (fp = fopen(filename, "r"))) {
 	// can't open file
+	printf("%s not able to open filename %s\n", __FUNCTION__, filename);
 	return -1;
     }
     // clear out tool table

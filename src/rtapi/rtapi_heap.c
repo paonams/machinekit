@@ -21,6 +21,9 @@
 #include "rtapi_heap_private.h"
 #include "rtapi_export.h"
 #include "rtapi_bitops.h"
+#if !defined(RTAPI)
+#include <stdio.h>
+#endif
 
 // this is straight from the malloc code in:
 // K&R The C Programming Language, Edition 2, pages 185-189

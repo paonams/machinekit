@@ -15,7 +15,7 @@ extern "C" {
     void custom_backtrace(const char *prefix, const char *header,
 		   btprint_t print, int skip);
     void custom_backtrace_1(const char *header, btprint1_t print);
-    int setstacktracemap(char* pidname);
+    int setstacktracemap(const char* pidname);
 
 #ifdef __cplusplus
 }

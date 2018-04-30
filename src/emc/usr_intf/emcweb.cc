@@ -271,7 +271,7 @@ void GenerateJson(const char *filename)
     if (pCtrl->GetInitState() == miniemc::EmcController::lsLoaded) {
         if (!buff)
             buff = (char *) malloc(32768);
-        memset(buff, 32768, 0);
+        memset(buff, 0, 32768);
         strcpy(buff, "{\n \"positions\":[");
         /*
          * Append Positions

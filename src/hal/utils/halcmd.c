@@ -125,6 +125,7 @@ int halcmd_startup(int quiet, char *uri, const char *svc_uuid) {
     signal(SIGPIPE, SIG_IGN);
     /* at this point all options are parsed, connect to HAL */
     /* create a unique module name, to allow for multiple halcmd's */
+    memset(comp_name, 0, sizeof(comp_name));
     snprintf(comp_name, sizeof(comp_name), "halcmd%d", getpid());
     /* tell the signal handler that we might have the mutex */
     hal_flag = 1;
@@ -134,6 +135,7 @@ int halcmd_startup(int quiet, char *uri, const char *svc_uuid) {
     // this closes a race condition where hal_init() would be called
     // before rtapi_app is done
     int retval;
+    fprintf(stdout, "halcmd_startup before rtapi_connect with comp_name %s uri %s\n", comp_name, uri);
     if ((retval = rtapi_connect(rtapi_instance, uri, svc_uuid))) {
         if (!quiet) {
             fprintf(stderr, "halcmd: cant connect to rtapi_app: %d (uri=%s uuid=%s): %s\n\n",
@@ -153,6 +155,7 @@ int halcmd_startup(int quiet, char *uri, const char *svc_uuid) {
     }
 
     /* connect to the HAL */
+    fprintf(stdout, "halcmd_startup before hal_init with comp_name %s\n", comp_name);
     comp_id = hal_init(comp_name);
     if (quiet) rtapi_set_msg_level(msg_lvl_save);
     /* done with mutex */
@@ -168,6 +171,7 @@ int halcmd_startup(int quiet, char *uri, const char *svc_uuid) {
     hal_ready(comp_id);
     current_flavor = flavor_byid(global_data->rtapi_thread_flavor);
 
+    fprintf(stdout, "halcmd_startup comp_name %s END\n", comp_name);
     return 0;
 }
 
@@ -912,6 +916,7 @@ int halcmd_preprocess_line ( char *line, char **tokens )
     /* copy to cmd_buf while doing variable replacements */
     retval = replace_vars(line, cmd_buf, sizeof(cmd_buf)-2, &detail);
     if (retval != 0) {
+        printf("halcmd_preprocess_line error in replace_vars \n");
 	if ((retval < 0) && (retval >= -7)) {  /* print better replacement errors */
             if(detail) {
                 halcmd_error(replace_errors[(-retval) -1], detail);
@@ -925,10 +930,10 @@ int halcmd_preprocess_line ( char *line, char **tokens )
     }
     /* split cmd_buff into tokens */
     retval = tokenize(cmd_buf, tokens);
-    printf("halcmd_preprocess_line cmd_buf %s\n", cmd_buf);
     if (retval != 0) {
 	return -3;
     }
+    printf("halcmd_preprocess_line cmd_buf %s\n", cmd_buf);
     /* tokens[] contains MAX_TOK+1 elements so there is always
        at least one empty one at the end... make it empty now */
     tokens[MAX_TOK] = "";

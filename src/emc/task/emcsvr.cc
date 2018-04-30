@@ -45,6 +45,7 @@ static int iniLoad(const char *filename)
 
     // open it
     if (inifile.Open(filename) == false) {
+        rcs_print("iniLoad fails to open filename %s\n", filename);
         return -1;
     }
 
@@ -101,7 +102,7 @@ int main(int argc, char *argv[])
     rcs_print("************************************\n");
     rcs_print("*           EMCSERVER              *\n");
     rcs_print("************************************\n");
-    rcs_print("src/emc/task/emcsvr.cc main called\n");
+    rcs_print("src/emc/task/emcsvr.cc main called emc_inifile %s\n", emc_inifile);
     // get configuration information
     iniLoad(emc_inifile);
 

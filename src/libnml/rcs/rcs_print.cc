@@ -437,7 +437,7 @@ int set_rcs_print_file(char *_file_name)
 int rcs_print(const char *_fmt, ...)
 {
     static char temp_buffer[400];
-    memset(temp_buffer, 400, 0);
+    memset(temp_buffer, 0, 400);
     int retval;
     va_list args;
     va_start(args, _fmt);

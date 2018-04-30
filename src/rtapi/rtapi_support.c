@@ -219,7 +219,7 @@ void rtapi_print(const char *fmt, ...) {
     rtapi_msg_handler(RTAPI_MSG_ALL, fmt, args);
 #ifdef ENABLE_LOG_FILE
     static char temp_buffer[400];
-    memset(temp_buffer, 400, 0);
+    memset(temp_buffer, 0, 400);
     retval = vsnprintf(temp_buffer, sizeof(temp_buffer), fmt, args);
     LOG(temp_buffer);
 #endif
@@ -236,7 +236,7 @@ void rtapi_print_msg(int level, const char *fmt, ...) {
 	rtapi_msg_handler(level, fmt, args);
 #ifdef ENABLE_LOG_FILE
 	static char temp_buffer[400];
-	memset(temp_buffer, 400, 0);
+	memset(temp_buffer, 0, 400);
 	retval = vsnprintf(temp_buffer, sizeof(temp_buffer), fmt, args);
 	LOG(temp_buffer);
 #endif

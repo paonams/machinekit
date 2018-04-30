@@ -429,10 +429,10 @@ int cms_config(CMS ** cms, const char *bufname, const char *procname, const char
     if (0 == bufname || 0 == procname || 0 == filename) {
 	return -1;
     }
-    rcs_print_debug(PRINT_CMS_CONFIG_INFO, "cms_config arguments:\n");
-    rcs_print_debug(PRINT_CMS_CONFIG_INFO, "bufname = %s\n", bufname);
-    rcs_print_debug(PRINT_CMS_CONFIG_INFO, "procname = %s\n", procname);
-    rcs_print_debug(PRINT_CMS_CONFIG_INFO, "filename = %s\n", filename);
+    rcs_print("cms_config cms_config arguments:\n");
+    rcs_print("cms_config bufname = %s\n", bufname);
+    rcs_print("cms_config procname = %s\n", procname);
+    rcs_print("cms_config filename = %s\n", filename);
 
     search.error_type = CONFIG_SEARCH_ERROR_NOT_SET;
     search.bufline_found = 0;

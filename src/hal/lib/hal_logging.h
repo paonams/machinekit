@@ -2,7 +2,11 @@
 #define HAL_LOGGING_H
 
 #include <rtapi.h>
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 
+//#include <unistd.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
 
