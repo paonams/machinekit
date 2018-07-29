@@ -50,20 +50,21 @@ SHMDRV_SRCS = rtapi/shmdrv/shmdrv.c \
 #ifeq ($(MODE), target)
 #LD=/home/sanjit/Documents/workArea/LINUXCNC/cross_compiler/buildroot-2015.11.1/output/host/usr/bin/arm-buildroot-linux-uclibcgnueabi-ld
 #endif
+LINUX_VERSION=3.10.y
 objects/.shmdrv-built: $(SHMDRV_SRCS)
 	for kdir in $(SHMDRV_KERNEL_DIRS); do \
 	    kver=`../scripts/kernel-vers.sh $$kdir`; \
-	    mkdir -p objects/userland/$$kver; \
-	    cp $(SHMDRV_SRCS) objects/userland/$$kver; \
-	    echo "Building userland shmdrv module for kernel version $kver"; \
+	    mkdir -p objects/userland/$(LINUX_VERSION); \
+	    cp $(SHMDRV_SRCS) objects/userland/$(LINUX_VERSION); \
+	    echo "Building userland shmdrv module for kernel version $(LINUX_VERSION)"; \
 	    $(MAKE) \
 		-C $$kdir \
-		M=$(BASEPWD)/objects/userland/$$kver \
+		M=$(BASEPWD)/objects/userland/$(LINUX_VERSION) \
 		CC=$(CC) KBUILD_VERBOSE=$(BUILD_VERBOSE) ARCH=$(ARCH_TYPE) LD=$(LD); \
-	    mkdir -p $(SHAREDOBJ_PATH)/rtlib/userland/$$kver; \
-	    cp objects/userland/$$kver/Module.symvers \
-		objects/userland/$$kver/shmdrv.ko \
-		$(SHAREDOBJ_PATH)/rtlib/userland/$$kver; \
+	    mkdir -p $(SHAREDOBJ_PATH)/rtlib/userland/$(LINUX_VERSION); \
+	    cp objects/userland/$(LINUX_VERSION)/Module.symvers \
+		objects/userland/$(LINUX_VERSION)/shmdrv.ko \
+		$(SHAREDOBJ_PATH)/rtlib/userland/$(LINUX_VERSION); \
 	done
 	touch $@
 
