@@ -1200,6 +1200,7 @@ static int loadrt_cmd(const bool instantiate, // true if called from do_newinst
 
     // determine module properties (loaded or not)
     retval = rtapi_get_tags(mod_name);
+    printf("%s mod_name %s\n", __FUNCTION__, mod_name);
     if(retval == -1) {
 	halcmd_error("Error in module tags search");
 	return retval;
@@ -1215,6 +1216,7 @@ static int loadrt_cmd(const bool instantiate, // true if called from do_newinst
     // just loadrt the comp
     if (!(instantiable && instantiate)) {
 	// legacy components
+	printf("%s legacy component calling loadrt\n", __FUNCTION__);
         return loadrt(mod_name, args);
     }
 
@@ -1231,7 +1233,9 @@ static int loadrt_cmd(const bool instantiate, // true if called from do_newinst
 	// XXX - autoload setting? I guess this is assumed
 	// to be on
 	if (!module_loaded(mod_name)) {
+	    printf("%s !module_loaded calling loadrt %s\n", __FUNCTION__, mod_name);
 	    if((retval = (loadrt(mod_name, argv))) )
+	    printf("%s !module_loaded calling loadrt %s retval %d\n", __FUNCTION__, mod_name, retval);
 		return retval;
 	}
 	// determine instance name:

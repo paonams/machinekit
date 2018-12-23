@@ -18,7 +18,7 @@ LIBNMLSRCS := $(addprefix libnml/, \
 
 $(call TOOBJSDEPS, $(LIBNMLSRCS)) : EXTRAFLAGS=-fPIC
 
-#CXXFLAGS += -I $(SOFTWARE_ROOT)/custom/lib -DENAB
+CXXFLAGS += -I $(SOFTWARE_ROOT)/custom/lib -DENABLE_LOG_FILE
 
 USERSRCS += $(LIBNMLSRCS)
 

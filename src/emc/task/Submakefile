@@ -12,6 +12,11 @@ USERSRCS += $(EMCSVRSRCS)
 	$(ECHO) Linking $(notdir $@)
 	@$(CXX) $(LDFLAGS) -Wl,-M,-Map,$@.map,--cref -o $@ $^ 
 TARGETS += ../bin/linuxcncsvr
+CXXFLAGS += -I $(SOFTWARE_ROOT)/custom/\
+            -I $(SOFTWARE_ROOT)/custom/interfaces\
+            -I $(SOFTWARE_ROOT)/custom/interfaces/include \
+
+CXXFLAGS += -I $(SOFTWARE_ROOT)/custom/lib -D ENABLE_LOG_FILE
 
 # disabled:	emc/task/iotaskintf.cc
 MILLTASKSRCS := \
@@ -31,6 +36,11 @@ MILLTASKSRCS := \
 	$(ULAPISRCS)
 USERSRCS += $(MILLTASKSRCS)
 
+GRFLAGS = \
+             -L/usr/local/lib `pkg-config --libs protobuf grpc++ grpc`\
+	                   -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed\
+			                 -ldl
+
 ../bin/milltask: $(call TOOBJS, $(MILLTASKSRCS)) \
 	$(SHAREDOBJ_PATH)/librs274.so.0 \
 	$(SHAREDOBJ_PATH)/liblinuxcnc.a \
@@ -42,7 +52,10 @@ USERSRCS += $(MILLTASKSRCS)
 	$(SHAREDOBJ_PATH)/librtapi_math.so.0 \
 	$(SHAREDOBJ_PATH)/libmtalk.so.0 \
 	$(SHAREDOBJ_PATH)/liblinuxcnc-pb2++.so.0 \
-	$(SHAREDOBJ_PATH)/Log.so
+	$(SHAREDOBJ_PATH)/Log.so \
+	$(SOFTWARE_ROOT)/custom/interfaces/src/DisplayInterface.lo \
+	$(SOFTWARE_ROOT)/custom/interfaces/grpc/gen/display/GrpcDisplayInterface.lo \
+	$(SOFTWARE_ROOT)/custom/interfaces/display/server/DisplayApplicationServer.lo 
 	$(ECHO) Linking $(notdir $@)
-	$(Q)$(CXX) -Wl,-M,-Map,$@.map,--cref -o $@ $^ $(LDFLAGS) $(BOOST_PYTHON_LIBS) -l$(LIBPYTHON) 
+	$(Q) $(CXX) -Wl,-M,-Map,$@.map,--cref -o $@ $^ $(LDFLAGS) $(GRFLAGS) $(BOOST_PYTHON_LIBS) -l$(LIBPYTHON) 
 TARGETS += ../bin/milltask

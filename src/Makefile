@@ -48,6 +48,8 @@ ifeq ($(BUILD_VERBOSE),1)
 else
   Q = @
 endif
+  
+Q =
 
 ifeq "$(findstring s,$(MAKEFLAGS))" ""
 ECHO=@echo

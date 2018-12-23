@@ -34,7 +34,7 @@ extern "C" {
 extern "C" double etime(void);
 #endif
 
-#undef ENABLE_LOG_FILE
+//#undef ENABLE_LOG_FILE
 #ifdef ENABLE_LOG_FILE
 #include <Log.h>
 #endif

@@ -3228,6 +3228,38 @@ static void sigaction_handler(int sig)
 }
 
 #define TASKMAINLOG "/etc/mlabs/log/emctaskmainLog"
+#define NEW_IPC 1
+
+#if defined(NEW_IPC)
+#include <interfaces/display/server/DisplayApplicationServer.h>
+
+class EmcTaskServer : public DisplayApplicationServer
+{
+    public:
+    EmcTaskServer();
+    virtual ~EmcTaskServer(){}
+
+    virtual int sendCommand(const std::string& command);
+};
+
+
+EmcTaskServer::EmcTaskServer()
+{
+    std::cout<<"EmcTaskServer::EmcTaskServer\n";
+    std::string server_address = "0.0.0.0:50051";
+    std::cout<<"EmcTaskServer::EmcTaskServer initializing server with server_address "<<server_address<<"\n";
+    initialize(server_address);
+
+    run();
+}
+
+
+int EmcTaskServer::sendCommand(const std::string& command)
+{
+    std::cout<<"EmcTaskServer::sendCommand Got command "<<command<<"\n";
+}
+#endif
+
 /*
 syntax: a.out {-d -ini <inifile>} {-nml <nmlfile>} {-shm <key>}
  */
@@ -3239,7 +3271,6 @@ int main(int argc, char *argv[])
     double minTime, maxTime;
 
 #ifdef ENABLE_LOG_FILE
-    //std::string file("/home/sanjit/Documents/workArea/LINUXCNC/MIRROR/emctaskmainLog");
     std::string file(TASKMAINLOG);
     logObject.initializeLog(file);
 #endif
@@ -3355,6 +3386,11 @@ int main(int argc, char *argv[])
     maxTime = 0.0;		// set to value that can never be underset
 
     rcs_print("src/emc/task/emctaskmain.cc BEFORE WHILE LOOP \n");
+#if defined(NEW_IPC)
+    std::cout<<"Starting EmcTaskServer\n";
+    EmcTaskServer* taskserver = new EmcTaskServer();
+
+#else
     while (!done) {
         //rcs_print("########################## WHILE BEGIN =========================\n");
         check_ini_hal_items();
@@ -3550,6 +3586,7 @@ int main(int argc, char *argv[])
 
     // clean up everything
     emctask_shutdown();
+#endif
     /* debugging */
     if (emcTaskNoDelay) {
         if (emc_debug & EMC_DEBUG_TASK_ISSUE) {
