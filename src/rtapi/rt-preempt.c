@@ -265,6 +265,9 @@ static int realtime_set_priority(task_data *task) {
 
     memset(&schedp, 0, sizeof(schedp));
     schedp.sched_priority = task->prio;
+    rtapi_print_msg(RTAPI_MSG_INFO,
+			"%s set FIFO scheduling policy with sched_priority (%d)\n",
+			__func__, schedp.sched_priority);
     if (sched_setscheduler(0, SCHED_FIFO, &schedp)) {
 	rtapi_print_msg(RTAPI_MSG_ERR,
 			"Unable to set FIFO scheduling policy: %s",
@@ -368,11 +371,11 @@ int _rtapi_task_start_hook(task_data *task, int task_id) {
     pthread_attr_init(&attr);
     pthread_attr_setstack(&attr, extra_task_data[task_id].stackaddr,
 			  task->stacksize);
-    rtapi_print_msg(RTAPI_MSG_DBG,
+    rtapi_print_msg(RTAPI_MSG_INFO,
 		    "About to pthread_create task %d\n", task_id);
     retval = pthread_create(&extra_task_data[task_id].thread,
 			    &attr, realtime_thread, (void *)task);
-    rtapi_print_msg(RTAPI_MSG_DBG,"Created task %d\n", task_id);
+    rtapi_print_msg(RTAPI_MSG_INFO,"Created task %d\n", task_id);
     pthread_attr_destroy(&attr);
     if (retval) {
 	pthread_barrier_destroy

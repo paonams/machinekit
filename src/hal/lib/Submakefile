@@ -38,7 +38,7 @@ $(call TOOBJSDEPS, $(HALLIBMTALK_SRCS)) : EXTRAFLAGS=-fPIC $(HALLIBMTALK_CXXFLAG
 # ULAPI: all thread-specific code now comes in through the ulapi library
 # (liblinuxcnculapi.so) which autoloads the proper ulapi on demand
 
-$(call TOOBJSDEPS, $(HALLIBSRCS)): EXTRAFLAGS += $(THREADS_RTFLAGS) -fPIC
+$(call TOOBJSDEPS, $(HALLIBSRCS)): EXTRAFLAGS += $(THREADS_RTFLAGS) -fPIC 
 
 # Add to list of sources to compile -DULAPI ->
 # objects/{$(HALLIBDIR)/hal_lib.o}

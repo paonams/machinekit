@@ -16,7 +16,7 @@
 #include <linux/version.h>
 #include <linux/proc_fs.h>
 #include <linux/string.h>
-
+u
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,10,0)
 #else
 // proc_dir_entry is private in Linux 3.10+, so re-define it here
@@ -137,7 +137,10 @@ static const struct file_operations proc_file_fops = {
 #endif
 
 int hal_proc_init(void) {
-    if(!rtapi_dir) return 0;
+    if(!rtapi_dir) {
+	printk(KERN_INFO "%s rtapi_dir is NULL: Error returning\n", __func__);
+	return 0;
+    }
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,10,0)
     hal_dir = create_proc_entry("hal", S_IFDIR, rtapi_dir);
     if(!hal_dir) { hal_proc_clean(); return -1; }

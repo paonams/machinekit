@@ -290,6 +290,7 @@ PROC_READ_OPEN_OPS(instance_file_fops, proc_read_instance);
 
 static int proc_init(void)
 {
+    printk(KERN_INFO "%s called\n", __func__);
     /* create the rtapi directory "/proc/rtapi" */
     rtapi_dir = CREATE_PROC_ENTRY("rtapi",S_IFDIR,NULL,NULL);
     if (rtapi_dir == 0)

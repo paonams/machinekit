@@ -106,6 +106,9 @@ int rtapi_newinst(int instance,
 	    cmd->add_argv(args[argc]);
 	    argc++;
 	}
+    std::cout<<"rtapi_newinst comp "<<comp<<
+    " instname "<<instname<<
+    " z_command "<<std::hex<<z_command<<"\n";
     int retval = rtapi_rpc(z_command, command, reply);
     if (retval)
 	return retval;
@@ -143,6 +146,10 @@ static int rtapi_loadop(pb::ContainerType type, int instance, const char *modnam
 	    cmd->add_argv(args[argc]);
 	    argc++;
 	}
+    std::cout<<__func__<<
+    " modname "<<modname<<
+    " instance "<<instance<<std::hex<<
+    " z_command "<<z_command<<"\n";
     int retval = rtapi_rpc(z_command, command, reply);
     if (retval)
 	return retval;
@@ -285,6 +292,7 @@ int rtapi_connect(int instance, char *uri, const char *svc_uuid)
     fprintf(stdout, "rtapi_connect before zsocket_new\n");
     z_command = zsocket_new (z_context, ZMQ_DEALER);
     assert(z_command);
+    std::cout<<__func__<<" z_command "<<std::hex<<z_command<<"\n";
 
     char z_ident[30];
     snprintf(z_ident, sizeof(z_ident), "halcmd%d",getpid());

@@ -105,6 +105,7 @@ int rtapi_app_main(void)
 
     /* have good config info, connect to the HAL */
     comp_id = hal_init("threads");
+    rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_app_main for threads module BEGIN with comp_id (%d)\n", comp_id);
     if (comp_id < 0) {
 	rtapi_print_msg(RTAPI_MSG_ERR, "THREADS: ERROR: hal_init() failed\n");
 	return -1;
@@ -147,11 +148,13 @@ int rtapi_app_main(void)
 	}
     }
     hal_ready(comp_id);
+    rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_app_main for threads module END\n");
     return 0;
 }
 
 void rtapi_app_exit(void)
 {
+    rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_app_exit for threads module comp_id (%d)\n", comp_id);
     hal_exit(comp_id);
 }
 

@@ -120,6 +120,7 @@ int _rtapi_task_new(const rtapi_task_args_t *args) {
     rtapi_mutex_get(&(rtapi_data->mutex));
 
 #ifdef MODULE
+    printk(KERN_INFO "%s called for MODULE\n", __func__);
     /* validate owner */
     if ((args->owner < 1) || (args->owner > RTAPI_MAX_MODULES)) {
 	rtapi_mutex_give(&(rtapi_data->mutex));
@@ -173,13 +174,15 @@ int _rtapi_task_new(const rtapi_task_args_t *args) {
     }
 
     // task slot found; reserve it and release lock
-    rtapi_print_msg(RTAPI_MSG_DBG,
+    rtapi_print_msg(RTAPI_MSG_INFO,
 		    "Creating new task %d  '%s:%d': "
-		    "req prio %d (highest=%d lowest=%d) stack=%lu fp=%d flags=%d\n",
+		    "req prio %d (highest=%d lowest=%d) stack=0x%lx fp=%d flags=%d "
+		    "arg->cpu_id (%d) rtapi_data->rt_cpu (%d) taskcode (%p)\n",
 		    task_id, args->name, rtapi_instance, args->prio,
 		    _rtapi_prio_highest(),
 		    _rtapi_prio_lowest(),
-		    args->stacksize, args->uses_fp, args->flags);
+		    args->stacksize, args->uses_fp, args->flags, 
+		    args->cpu_id, rtapi_data->rt_cpu, args->taskcode);
     task->magic = TASK_MAGIC;
 
     /* fill out task structure */
@@ -192,7 +195,7 @@ int _rtapi_task_new(const rtapi_task_args_t *args) {
     task->uses_fp = args->uses_fp;
     task->cpu = args->cpu_id > -1 ? args->cpu_id : rtapi_data->rt_cpu;
 
-    rtapi_print_msg(RTAPI_MSG_DBG, "Task CPU:  %d\n", task->cpu);
+    rtapi_print_msg(RTAPI_MSG_INFO, "Task CPU:  %d\n", task->cpu);
 
     rtapi_snprintf(task->name, sizeof(task->name), 
 	     "%s:%d", args->name, rtapi_instance);
@@ -239,6 +242,9 @@ int _rtapi_task_new(const rtapi_task_args_t *args) {
        error and a task_id???).  */
     task->state = USERLAND;	// userland threads don't track this
 
+    rtapi_print_msg(RTAPI_MSG_INFO,
+	"RTAPI: USERSPACE THREAD for task %02d installed by module %02d\n",
+	task_id, task->owner);
 #  ifdef HAVE_RTAPI_TASK_NEW_HOOK
     retval = _rtapi_task_new_hook(task,task_id);
 #  else
@@ -251,7 +257,7 @@ int _rtapi_task_new(const rtapi_task_args_t *args) {
     rtapi_mutex_give(&(rtapi_data->mutex));
 
     /* announce the birth of a brand new baby task */
-    rtapi_print_msg(RTAPI_MSG_DBG,
+    rtapi_print_msg(RTAPI_MSG_INFO,
 	"RTAPI: task %02d installed by module %02d, priority %d, code: %p\n",
 	task_id, task->owner, task->prio, args->taskcode);
 
@@ -344,10 +350,10 @@ int _rtapi_task_start(int task_id, unsigned long int period_nsec) {
     task->period = period_nsec;
     task->ratio = period_nsec / period;
 
-    rtapi_print_msg(RTAPI_MSG_DBG,
-		    "rtapi_task_start:  starting task %d '%s'\n",
+    rtapi_print_msg(RTAPI_MSG_INFO,
+		    "rtapi_task_start:  USERSPACE RTAPI starting task %d '%s'\n",
 		    task_id, task->name);
-    rtapi_print_msg(RTAPI_MSG_DBG, "RTAPI: period_nsec: %ld\n", period_nsec);
+    rtapi_print_msg(RTAPI_MSG_INFO, "RTAPI:USERSPACE RTAPI  period_nsec: %ld\n", period_nsec);
 
     return _rtapi_task_start_hook(task,task_id,0);
 }
@@ -378,8 +384,9 @@ int _rtapi_task_start(int task_id, unsigned long int period_nsec) {
 
     /* ok, task is started */
     task->state = PERIODIC;
-    rtapi_print_msg(RTAPI_MSG_DBG, "RTAPI: start_task id: %02d\n", task_id);
-    rtapi_print_msg(RTAPI_MSG_DBG, "RTAPI: period_nsec: %ld\n", period_nsec);
+    rtapi_print_msg(RTAPI_MSG_INFO, "RTAPI: start_task id: %02d\n", task_id);
+    rtapi_print_msg(RTAPI_MSG_INFO "RTAPI: period_nsec: %ld\n", period_nsec);
+    printk("RTAPI: start_task id: %02d\n", task_id);
     return retval;
 }
 #endif  /* kernel threads */

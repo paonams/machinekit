@@ -537,7 +537,6 @@ static int do_load_cmd(int instance,
     void *module;
     int retval;
 
-    LOG(__FUNCTION__<<" name "<<name<<"\n");
     if (w == NULL) {
 	if (kernel_threads(flavor)) {
 	    string cmdargs = pbconcat(args, " ", "'");
@@ -548,16 +547,15 @@ static int do_load_cmd(int instance,
 		modules[name] = (void *) -1;  // so 'if (modules[name])' works
 		loading_order.push_back(name);
 	    }
-	    rtapi_print_msg(RTAPI_MSG_ERR, "%s: kernel threads cmd (%s) args (%s)\n",
+	    rtapi_print_msg(RTAPI_MSG_INFO, "%s: KERNEL_THREAD cmd (%s) args (%s)\n",
 		    __FUNCTION__, name.c_str(), cmdargs.c_str());
 	    return retval;
 	} else {
 	    strncpy(module_name, (name + flavor->mod_ext).c_str(),
 		    PATH_MAX);
-	    rtapi_print_msg(RTAPI_MSG_ERR, "%s: dlopen of module_name (%s)\n",
-		    __FUNCTION__, module_name);
-	    std::cout<<"do_load_cmd module_name "<<module_name<<" instance "
-		<<instance<<"\n";
+	    string cmdargs = pbconcat(args, " ", "'");
+	    rtapi_print_msg(RTAPI_MSG_INFO, "%s: USER_THREAD dlopen of cmd (%s) args (%s) module_name (%s)\n",
+		    __FUNCTION__, name.c_str(), cmdargs.c_str(), module_name);
 	    module = modules[name] = dlopen(module_name, RTLD_GLOBAL |RTLD_NOW);
 	    if (!module) {
 		string errmsg(dlerror());
@@ -609,6 +607,8 @@ static int do_load_cmd(int instance,
 
 	    // need to call rtapi_app_main with as root
 	    // RT thread creation and hardening requires this
+	    rtapi_print_msg(RTAPI_MSG_INFO, "%s: USER_THREAD starting rtapi_app_main for cmd (%s) args (%s)\n",
+		    __FUNCTION__, name.c_str(), cmdargs.c_str());
 	    if ((result = start()) < 0) {
 		note_printf(pbreply, "rtapi_app_main(%s): %d %s\n",
 			    name.c_str(), result, strerror(-result));
@@ -617,7 +617,7 @@ static int do_load_cmd(int instance,
 	    }
 	    loading_order.push_back(name);
 
-	    rtapi_print_msg(RTAPI_MSG_ERR, "%s: non-kernel thread cmd (%s) mod_name (%s) args (%s)\n",
+	    rtapi_print_msg(RTAPI_MSG_INFO, "%s: USER_THREAD thread cmd (%s) mod_name (%s) args (%s)\n",
 		    __FUNCTION__, name.c_str(), module_name, pbconcat(args, " ", "'").c_str());
 	    return 0;
 	}
@@ -810,7 +810,6 @@ static int rtapi_request(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
 
     pb::Container pbreq, pbreply;
 
-    LOG(__FUNCTION__<<"\n");
     if (!pbreq.ParseFromArray(zframe_data(request_frame),
 			      zframe_size(request_frame))) {
 	rtapi_print_msg(RTAPI_MSG_ERR, "cant decode request from %s (size %zu)",
@@ -828,12 +827,9 @@ static int rtapi_request(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
 
     pbreply.set_type(pb::MT_RTAPI_APP_REPLY);
     std::cout<<"rtapi_request called with pbreq.type "<<ContainerType_Name(pbreq.type())<<"\n";
-    rtapi_print_msg(RTAPI_MSG_ERR, "rtapi_request with pbreq.type (%s)\n",
+    rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_request with pbreq.type (%s)\n",
 	    ContainerType_Name(pbreq.type()).c_str());
 
-    string buffer;
-    TextFormat::PrintToString(pbreq, &buffer);
-    LOG(__FUNCTION__<<" req.type "<<buffer<<"\n");
     switch (pbreq.type()) {
     case pb::MT_RTAPI_APP_PING:
 	char buffer[LINELEN];
@@ -856,12 +852,13 @@ static int rtapi_request(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
 	assert(pbreq.has_rtapicmd());
 	assert(pbreq.rtapicmd().has_func());
 	assert(pbreq.rtapicmd().has_instance());
+	rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_request MT_RTAPI_APP_CALLFUNC instance (%d) func (%s)\n",
+		pbreq.rtapicmd().instance(),
+		(pbreq.rtapicmd().func()).c_str());
 	pbreply.set_retcode(do_callfunc_cmd(pbreq.rtapicmd().instance(),
 					      pbreq.rtapicmd().func(),
 					      pbreq.rtapicmd().argv(),
 					      pbreply));
-	rtapi_print_msg(RTAPI_MSG_ERR, "rtapi_request MT_RTAPI_APP_CALLFUNC func (%s)\n",
-		(pbreq.rtapicmd().func()).c_str());
 	break;
 
     case pb::MT_RTAPI_APP_NEWINST:
@@ -869,6 +866,10 @@ static int rtapi_request(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
 	assert(pbreq.rtapicmd().has_comp());
 	assert(pbreq.rtapicmd().has_instname());
 	assert(pbreq.rtapicmd().has_instance());
+	rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_request MT_RTAPI_APP_NEWINST instance (%d) comp(%s) instname(%s)\n",
+		pbreq.rtapicmd().instance(),
+		(pbreq.rtapicmd().comp()).c_str(),
+		(pbreq.rtapicmd().instname()).c_str());
 	pbreply.set_retcode(do_newinst_cmd(pbreq.rtapicmd().instance(),
 					   pbreq.rtapicmd().comp(),
 					   pbreq.rtapicmd().instname(),
@@ -881,6 +882,9 @@ static int rtapi_request(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
 	assert(pbreq.has_rtapicmd());
 	assert(pbreq.rtapicmd().has_instname());
 	assert(pbreq.rtapicmd().has_instance());
+	rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_request MT_RTAPI_APP_DELINST instance (%d) instname(%s)\n",
+		pbreq.rtapicmd().instance(),
+		(pbreq.rtapicmd().instname()).c_str());
 	pbreply.set_retcode(do_delinst_cmd(pbreq.rtapicmd().instance(),
 					   pbreq.rtapicmd().instname(),
 					   pbreply));
@@ -891,6 +895,9 @@ static int rtapi_request(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
 	assert(pbreq.has_rtapicmd());
 	assert(pbreq.rtapicmd().has_modname());
 	assert(pbreq.rtapicmd().has_instance());
+	rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_request MT_RTAPI_APP_LOADRT instance (%d) modname(%s)\n",
+		pbreq.rtapicmd().instance(),
+		(pbreq.rtapicmd().modname()).c_str());
 	pbreply.set_retcode(do_load_cmd(pbreq.rtapicmd().instance(),
 					pbreq.rtapicmd().modname(),
 					pbreq.rtapicmd().argv(),
@@ -901,6 +908,9 @@ static int rtapi_request(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
 	assert(pbreq.rtapicmd().has_modname());
 	assert(pbreq.rtapicmd().has_instance());
 
+	rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_request MT_RTAPI_APP_UNLOADRT instance (%d) modname(%s)\n",
+		pbreq.rtapicmd().instance(),
+		(pbreq.rtapicmd().modname()).c_str());
 	pbreply.set_retcode(do_unload_cmd(pbreq.rtapicmd().instance(),
 					  pbreq.rtapicmd().modname(),
 					  pbreply));
@@ -909,9 +919,13 @@ static int rtapi_request(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
     case pb::MT_RTAPI_APP_LOG:
 	assert(pbreq.has_rtapicmd());
 	if (pbreq.rtapicmd().has_rt_msglevel()) {
+	    rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_request MT_RTAPI_APP_LOG rt_msg_level(%d)\n",
+		    pbreq.rtapicmd().rt_msglevel());
 	    global_data->rt_msg_level = pbreq.rtapicmd().rt_msglevel();
 	}
 	if (pbreq.rtapicmd().has_user_msglevel()) {
+	    rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_request MT_RTAPI_APP_LOG user_msg_level(%d)\n",
+		    pbreq.rtapicmd().user_msglevel());
 	    global_data->user_msg_level = pbreq.rtapicmd().user_msglevel();
 	}
 	pbreply.set_retcode(0);
@@ -926,7 +940,14 @@ static int rtapi_request(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
 	assert(pbreq.rtapicmd().has_instance());
 	assert(pbreq.rtapicmd().has_flags());
 
+	rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_request MT_RTAPI_APP_NEWTHREAD threadname (%s) threadperiod (%d) use_fp (%d) cpu (%d) flags (%d)\n",
+		pbreq.rtapicmd().threadname().c_str(),
+		pbreq.rtapicmd().threadperiod(),
+		pbreq.rtapicmd().use_fp(),
+		pbreq.rtapicmd().cpu(),
+		pbreq.rtapicmd().flags());
 	if (kernel_threads(flavor)) {
+	    rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_request MT_RTAPI_APP_NEWTHREAD KERNEL_THREAD\n");
 	    int retval =  procfs_cmd(PROCFS_RTAPICMD,"newthread %s %d %d %d %d",
 				     pbreq.rtapicmd().threadname().c_str(),
 				     pbreq.rtapicmd().threadperiod(),
@@ -936,6 +957,7 @@ static int rtapi_request(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
 	    pbreply.set_retcode(retval < 0 ? retval:0);
 
 	} else {
+	    rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_request MT_RTAPI_APP_NEWTHREAD USER_THREAD\n");
 	    void *w = modules["hal_lib"];
 	    if (w == NULL) {
 		pbreply.add_note("hal_lib not loaded");
@@ -969,6 +991,8 @@ static int rtapi_request(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
 	assert(pbreq.rtapicmd().has_threadname());
 	assert(pbreq.rtapicmd().has_instance());
 
+	rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_request MT_RTAPI_APP_DELTHREAD threadname (%s)\n",
+		pbreq.rtapicmd().threadname().c_str());
 	if (kernel_threads(flavor)) {
 	    int retval =  procfs_cmd(PROCFS_RTAPICMD, "delthread %s",
 					   pbreq.rtapicmd().threadname().c_str());
@@ -1261,6 +1285,7 @@ static int mainloop(size_t  argc, char **argv)
 
     std::cout<<"src/rtapi/rtapi_app.cc mainloop before NOTYET\n";
 #ifdef NOTYET
+    // code doesn't go inside
     // determine interface to bind to if remote option set
     if ((remote || z_uri)  && interfaces) {
 	char ifname[LINELEN], ip[LINELEN];
@@ -1305,12 +1330,14 @@ static int mainloop(size_t  argc, char **argv)
 	    global_data->rtapi_app_pid = 0;
 	    exit(EXIT_FAILURE);
 	}
-	rtapi_print_msg(RTAPI_MSG_ERR,"accepting commands at %s\n",uri);
+	rtapi_print_msg(RTAPI_MSG_INFO,"accepting commands at %s\n",uri);
 	umask(prev);
     }
     zloop_t *z_loop = zloop_new();
     assert(z_loop);
-    zloop_set_verbose(z_loop, debug);
+    //zloop_set_verbose(z_loop, debug);
+    rtapi_print_msg(RTAPI_MSG_INFO,"zloop_set_verbose debug %d\n",debug);
+    zloop_set_verbose(z_loop, 1);
 
     zmq_pollitem_t signal_poller = { 0, signal_fd, ZMQ_POLLIN };
     if (trap_signals){
@@ -1319,10 +1346,10 @@ static int mainloop(size_t  argc, char **argv)
     }
 
     zmq_pollitem_t command_poller = { z_command, 0, ZMQ_POLLIN };
-    std::cout<<"src/rtapi/rtapi_app.cc mainloop setting command_poller\n";
+    rtapi_print_msg(RTAPI_MSG_INFO,"setting zloop_poller \n");
     zloop_poller(z_loop, &command_poller, rtapi_request, NULL);
 
-    std::cout<<"src/rtapi/rtapi_app.cc mainloop setting s_handle_timer\n";
+    rtapi_print_msg(RTAPI_MSG_INFO,"setting zloop_timer to BACKGROUND_TIMER %d msecs\n", BACKGROUND_TIMER);
     zloop_timer (z_loop, BACKGROUND_TIMER, 0, s_handle_timer, NULL);
 
 #ifdef NOTYET
@@ -1354,11 +1381,9 @@ static int mainloop(size_t  argc, char **argv)
 #endif
 
     // report success
-    rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_app:%d ready flavor=%s gcc=%s git=%s",
-		    instance_id, flavor->name,  __VERSION__, GIT_VERSION);
+    rtapi_print_msg(RTAPI_MSG_INFO, "rtapi_app:%d ready flavor=%s",
+		    instance_id, flavor->name);
 
-    rtapi_print_msg(RTAPI_MSG_ERR, "rtapi_app:%d ready flavor=%s gcc=%s git=%s",
-		    instance_id, flavor->name,  __VERSION__, GIT_VERSION);
     // the RT stack is now set up and good for use
     global_data->rtapi_app_pid = getpid();
 
@@ -1387,7 +1412,7 @@ static int configure_memory(void)
     unsigned int i, pagesize;
     char *buf;
 
-    LOG(__FUNCTION__<<"\n");
+    rtapi_print_msg(RTAPI_MSG_INFO, "ENTER \n");
     if (global_data->rtapi_thread_flavor != RTAPI_POSIX_ID) {
 	// Realtime tweak requires privs
 	/* Lock all memory. This includes all current allocations (BSS/data)
@@ -1403,18 +1428,23 @@ static int configure_memory(void)
 	}
     }
 
+    rtapi_print_msg(RTAPI_MSG_INFO,
+			"turning off malloc trimming\n");
     /* Turn off malloc trimming.*/
     if (!mallopt(M_TRIM_THRESHOLD, -1)) {
 	rtapi_print_msg(RTAPI_MSG_WARN,
 			"mallopt(M_TRIM_THRESHOLD, -1) failed\n");
 	return 1;
     }
+    rtapi_print_msg(RTAPI_MSG_INFO,
+			"turning off mmap usage\n");
     /* Turn off mmap usage. */
     if (!mallopt(M_MMAP_MAX, 0)) {
 	rtapi_print_msg(RTAPI_MSG_WARN,
 			"mallopt(M_MMAP_MAX, -1) failed\n");
 	return 1;
     }
+    rtapi_print_msg(RTAPI_MSG_INFO, "preallocating memory of size PRE_ALLOC_SIZE 0x%x\n", PRE_ALLOC_SIZE);
     buf = static_cast<char *>(malloc(PRE_ALLOC_SIZE));
     if (buf == NULL) {
 	rtapi_print_msg(RTAPI_MSG_WARN, "malloc(PRE_ALLOC_SIZE) failed\n");
@@ -1437,6 +1467,7 @@ static int configure_memory(void)
      * a major/minor pagefault, even with swapping enabled. */
     free(buf);
 
+    rtapi_print_msg(RTAPI_MSG_INFO, "DONE \n");
     return 0;
 }
 

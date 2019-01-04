@@ -40,7 +40,7 @@ static void register_stuff(register_context_t *rctx)
 {
 
     const char *name = avahi_client_get_host_name_fqdn(rctx->client);
-    syslog_async(LOG_DEBUG, "%s: actual hostname as announced by avahi='%s'", __FUNCTION__, name);
+    syslog_async(LOG_INFO, "%s: actual hostname as announced by avahi='%s'", __FUNCTION__, name);
 
     if (!rctx->group) {
         if (!(rctx->group = avahi_entry_group_new(rctx->client,
@@ -219,6 +219,9 @@ register_context_t *ll_zeroconf_register(zservice_t *s, AvahiCzmqPoll *av_loop)
     assert(rctx->name);
     rctx->czmq_poll = av_loop;
 
+    syslog_async(LOG_INFO,
+		     "%s zeroconf: avahi client service name: %s\n",
+		     __func__, rctx->name);
     if (!(rctx->client = avahi_client_new(avahi_czmq_poll_get(rctx->czmq_poll),
 					  AVAHI_CLIENT_NO_FAIL,
 					  client_callback,

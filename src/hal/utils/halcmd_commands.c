@@ -3692,7 +3692,7 @@ int do_newinst_cmd(char *comp, char *inst, char *args[])
     cstatus_t status = classify_comp(comp);
     char *argv[] = { NULL};
     bool singleton = false;
-
+    printf("do_newinst_cmd comp %s inst %s status %d\n", comp, inst, (int)status);
     switch (status) {
     case CS_NOT_LOADED:
 	if (autoload) {
