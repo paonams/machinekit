@@ -37,7 +37,7 @@ MILLTASKSRCS := \
 USERSRCS += $(MILLTASKSRCS)
 
 GRFLAGS = \
-             -L/usr/local/lib `pkg-config --libs protobuf grpc++ grpc`\
+             -L$(TARGET_SYSROOT)/usr/local/lib `$(PKG_CONFIG) --libs protobuf grpc++ grpc`\
 	                   -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed\
 			                 -ldl
 

@@ -12,7 +12,7 @@
 
 #include <machinetalk/generated/message.pb.h>
 #include <google/protobuf/text_format.h>
-
+#include <iostream>
 using namespace google::protobuf;
 
 static pb::Container command, reply;
